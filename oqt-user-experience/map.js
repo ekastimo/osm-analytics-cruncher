@@ -17,6 +17,8 @@ module.exports = function(tileLayers, tile, writeData, done) {
             users[user].waterways += turf.lineDistance(val, "kilometers");
         if (val.properties.building && val.geometry.type !== "Point")
             users[user].buildings += 1;
+        if (val.properties.amenity && val.properties.amenity ==="mobile_money_agent" && val.geometry.type !== "Point")
+            users[user].mobilemoney += 1;
     });
 
     done(null, users);

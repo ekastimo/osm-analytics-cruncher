@@ -11,11 +11,19 @@ if (filter.experience.file)
 module.exports = function(tileLayers, tile, writeData, done) {
     var layer = tileLayers.osm.osm;
 
+   function hasAmenity(feature, amenity) {
+        var resp = feature.properties['amenity'] && feature.properties['amenity'] === amenity;
+        return resp;
+    }
     // filter
     function hasTag(feature, tag) {
         return feature.properties[tag] && feature.properties[tag] !== 'no';
     }
-    layer.features = layer.features.filter(function(feature) {
+
+    layer.features = layer.features.filter(function (feature) {
+        if (filter.amenity) {
+            return feature.geometry.type === filter.geometry && hasAmenity(feature, filter.amenity);
+        }
         return feature.geometry.type === filter.geometry && hasTag(feature, filter.tag);
     });
 

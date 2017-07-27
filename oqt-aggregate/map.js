@@ -52,6 +52,9 @@ module.exports = function(tileLayers, tile, writeData, done) {
         } else if (feature.geometry.type === 'Polygon') {
             clipper = lineclip.polygon;
             geometry = feature.geometry.coordinates[0];
+        } else if (feature.geometry.type === 'Point') {
+            clipper = function (a, b) { return { length: 1 } };
+            geometry = feature.geometry.coordinates;
         } else return;// todo: support more geometry types
 
         var featureBbox = turf.extent(feature);

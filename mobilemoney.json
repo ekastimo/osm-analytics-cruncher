@@ -1,0 +1,9 @@
+{
+    "geometry": "Point",
+    "tag": "mobile_money_agent",
+    "experience": {
+        "file": "./experiences.json",
+        "field": "mobilemoney"
+    },
+    "amenity":"mobile_money_agent"
+}
