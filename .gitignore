@@ -2,3 +2,8 @@ intermediate/
 *.mbtiles
 hotprojects.geojson
 experiences.json
+hotprojects.raw.geojson
+results
+node_modules/
+server/node_modules/
+.vscode/
