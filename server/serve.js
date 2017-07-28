@@ -54,12 +54,18 @@ tilelive.load('mbtiles://../results/buildings.mbtiles', function (err, buildings
                 if (err) {
                     throw err;
                 }
+                tilelive.load('mbtiles://../results/generic.mbtiles', function (err, generic) {
+                if (err) {
+                    throw err;
+                }
                 var allData = {};
                 allData['buildings'] = buildings;
                 allData['highways'] = highways;
                 allData['railways'] = railways;
                 allData['mobilemoney'] = mobilemoney;
+                allData['generic'] = generic;
                 initServer(allData);
+            });
             });
         });
     });

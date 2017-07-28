@@ -165,9 +165,12 @@ function processMeta(tile, writeData, done) {
                 bin.properties._userExperienceMin = stats.quantile(experiences, 0.25);
                 bin.properties._userExperienceMax = stats.quantile(experiences, 0.75);
                 bin.properties._userExperiences = lodash.sampleSize(experiences, 16).join(';');
-
+                //TODO Filter FSP queries so that we do not slowdown existing cruncher
+                bin.properties._economicActivity = computeEconActivity(bin.geometry);
+                bin.properties._populationDensity = computePupulationDensity(bin.geometry);
+                bin.properties._peoplePerAgent = computePeoplePerAgent(bin.geometry);
                 output.features.push(bin);
-            }
+            } 
         }
         output.features = output.features.filter(function(feature) {
             return feature.properties._count > 0;
@@ -176,4 +179,28 @@ function processMeta(tile, writeData, done) {
         writeData(JSON.stringify(output)+'\n');
         done();
     });
+}
+
+
+
+function getRandomInt(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
+}
+
+function computeEconActivity(geometry){
+    // TODO do actual computation
+    return getRandomInt(0,8);
+}
+
+
+function computePupulationDensity(geometry){
+    // TODO do actual computation
+    return getRandomInt(0,10);
+}
+
+function computePeoplePerAgent(geometry){
+    // TODO do actual computation
+    return getRandomInt(0,1000);
 }

@@ -84,6 +84,11 @@ module.exports = function(tileLayers, tile, writeData, done) {
         feature.properties.binY = Math.floor(index / binningFactor);
         feature.properties._count = binCounts[index];
         feature.properties._lineDistance = binDistances[index];
+        //TODO Filter FSP queries so that we do not slowdown existing cruncher
+        feature.properties._economicActivity = computeEconActivity(feature.geometry);
+        feature.properties._populationDensity = computePupulationDensity(feature.geometry);
+        feature.properties._peoplePerAgent = computePeoplePerAgent(feature.geometry);
+        
         if (!(binCounts[index] > 0)) return;
         feature.properties._timestamp = lodash.meanBy(binObjects[index], '_timestamp'); // todo: don't hardcode properties to average?
         feature.properties._userExperience = lodash.meanBy(binObjects[index], '_userExperience');
@@ -106,3 +111,26 @@ module.exports = function(tileLayers, tile, writeData, done) {
     writeData(JSON.stringify(output)+'\n');
     done();
 };
+
+
+function getRandomInt(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
+}
+
+function computeEconActivity(geometry){
+    // TODO do actual computation
+    return getRandomInt(0,8);
+}
+
+
+function computePupulationDensity(geometry){
+    // TODO do actual computation
+    return getRandomInt(0,10);
+}
+
+function computePeoplePerAgent(geometry){
+    // TODO do actual computation
+    return getRandomInt(0,1000);
+}
