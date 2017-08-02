@@ -12,21 +12,47 @@ module.exports = function (tileLayers, tile, writeData, done) {
     var layer = tileLayers.osm.osm;
 
     function hasAmenity(feature, amenity) {
-        var resp = feature.properties['amenity'] && feature.properties['amenity'] === amenity;
-        return resp;
+        return feature.properties['amenity'] && feature.properties['amenity'] === amenity;
     }
     // filter
     function hasTag(feature, tag) {
         return feature.properties[tag] && feature.properties[tag] !== 'no';
     }
 
+    function processComposite(feature) {
+        var tags = filter.tags;
+        var hasAnyTag = false;
+        tags.forEach(function (tag) {
+            hasAnyTag = hasAnyTag || hasTag(feature, tag);
+        });
+
+        var amenities = filter.amenities;
+        var hasAnyAmenity = false;
+        amenities.forEach(function (amenity) {
+            hasAnyAmenity = hasAnyAmenity || hasAmenity(feature, amenity);
+        });
+        return hasAnyTag || hasAnyAmenity;
+    }
+
+    function readCompositeProps(feature) {
+        var extraProps = {};
+        filter.tags.forEach(function (tag) {
+            if (hasTag(feature, tag)) {
+                extraProps[tag] = feature.properties[tag];
+            }
+        });
+
+        filter.amenities.forEach(function (amenity) {
+            if (hasAmenity(feature, amenity)) {
+                extraProps["amenity"] = feature.properties["amenity"];
+            }
+        });
+        return extraProps;
+    }
+
     layer.features = layer.features.filter(function (feature) {
-        if(filter.bound){
-            //TODO shud be able to load country tiles only
-            return true;
-        }
-        if (filter.amenity) {
-            return feature.geometry.type === filter.geometry && hasAmenity(feature, filter.amenity);
+        if (filter.composite) {
+            return processComposite(feature);
         }
         return feature.geometry.type === filter.geometry && hasTag(feature, filter.tag);
     });
@@ -35,32 +61,23 @@ module.exports = function (tileLayers, tile, writeData, done) {
     layer.features.forEach(function (feature) {
         var props = feature.properties;
         var user = props['@uid'];
-        feature.properties = {
+        var newProps = {
             _uid: user,
             _timestamp: props['@timestamp'],
-            _economicActivity : computeEconActivity(feature.geometry)
         };
-        feature.properties[filter.tag] = props[filter.tag];
+        if (filter.composite) {
+            var extraProps = readCompositeProps(feature);
+            Object.assign(newProps, extraProps);
+            //console.log(extraProps);
+        }
+        feature.properties = newProps
         if (users[user] && users[user][filter.experience.field])
             feature.properties._userExperience = users[user][filter.experience.field]; // todo: include all/generic experience data?
     });
 
     // output
-    if (layer.features.length > 0)
-        writeData(JSON.stringify(layer) + '\n');
-
+    if (layer.features.length > 0) {
+       writeData(JSON.stringify(layer) + '\n');
+    }
     done();
 };
-
-
-
-function getRandomInt(min, max) {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
-}
-
-function computeEconActivity(geometry){
-    // TODO do actual computation
-    return getRandomInt(0,8);
-}
