@@ -8,10 +8,16 @@ var stats = require('simple-statistics');
 
 var binningFactor = global.mapOptions.binningFactor; // number of slices in each direction
 
+Array.prototype.scaleBetween = function (scaledMin, scaledMax) {
+    var max = Math.max.apply(Math, this);
+    var min = Math.min.apply(Math, this);
+    return this.map(num => (scaledMax - scaledMin) * (num - min) / (max - min) + scaledMin);
+}
+
 module.exports = function (tileLayers, tile, writeData, done) {
     var layer = tileLayers.osm.osm;
+    var popn = tileLayers.popn['12geojson'];
     var tileBbox = sphericalmercator.bbox(tile[0], tile[1], tile[2]);
-
     var bins = [],
         bboxMinXY = sphericalmercator.px([tileBbox[0], tileBbox[1]], tile[2]),
         bboxMaxXY = sphericalmercator.px([tileBbox[2], tileBbox[3]], tile[2]),
@@ -92,6 +98,7 @@ module.exports = function (tileLayers, tile, writeData, done) {
     });
 
     var output = turf.featurecollection(bins.map(turf.bboxPolygon));
+
     output.features.forEach(function (feature, index) {
         feature.properties.binX = index % binningFactor;
         feature.properties.binY = Math.floor(index / binningFactor);
@@ -118,17 +125,22 @@ module.exports = function (tileLayers, tile, writeData, done) {
         var noOfBuildings = stats.sum(lodash.map(binObjects[index], '_buildingCount'));
         var noOfMMAgents = stats.sum(lodash.map(binObjects[index], '_mmAgentCount'));
         var noOfHighways = stats.sum(lodash.map(binObjects[index], '_highwayCount'));
-        var noOfPeople = computePopulationDensity(feature.geometry);
+        var noOfPeople = getPopulation(feature, popn.features);
+        var peoplePerAgent = (noOfMMAgents <= 0) ? 0 : Math.ceil(noOfPeople / noOfMMAgents);
+        var economicActivity = computeEconActivity(noOfBuildings, noOfMMAgents, noOfHighways, noOfPeople);
+
         feature.properties._populationDensity = noOfPeople;
-        feature.properties._peoplePerAgent = noOfPeople;
-        feature.properties._economicActivity = computeEconActivity(feature.geometry);
+        feature.properties._peoplePerAgent = peoplePerAgent;
+        feature.properties._economicActivity = economicActivity;
         feature.properties._noOfMMAgents = noOfMMAgents;
-        //console.log({ count: _binCounts[index], noOfBuildings, noOfMMAgents, noOfHighways });
+        //console.log({ count: _binCounts[index], noOfBuildings, noOfMMAgents, noOfHighways, noOfPeople, peoplePerAgent, economicActivity });
         //_populationDensity, _peoplePerAgent, _economicActivity, _noOfMMAgents, _xcount
     });
+
     output.features = output.features.filter(function (feature) {
         return feature.properties._xcount > 0;
     });
+
     output.properties = { tileX: tile[0], tileY: tile[1], tileZ: tile[2] };
     writeData(JSON.stringify(output) + '\n');
     done();
@@ -155,18 +167,27 @@ function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
 }
 
-function computeEconActivity(geometry) {
-    // TODO do actual computation
-    return getRandomInt(0, 8);
+
+function getScaled(num, max, min) {
+    return [min, num, max].scaleBetween(1, 10)[1];
 }
 
-
-function computePopulationDensity(geometry) {
-    // TODO do actual computation
-    return getRandomInt(0, 10);
+function computeEconActivity(noOfBuildings, noOfMMAgents, noOfHighways, noOfPeople) {
+    const scaledMin = 0.3010299956639812;// Pre attained value
+    const scaledMax = 4.072984744627931;// Pre attained value
+    const total = noOfBuildings + noOfMMAgents + noOfHighways + noOfPeople;
+    // TODO make more intelligent computation
+    const value = total <= 0 ? 0 : Math.log10(total);
+    return getScaled(value, scaledMin, scaledMax);
 }
 
-function computePeoplePerAgent(geometry) {
-    // TODO do actual computation
-    return getRandomInt(0, 1000);
+function getPopulation(binFeature, features) {
+    const centroid = turf.centroid(binFeature);
+    for (var i = 0; i < features.length; i++) {
+        const nextPoly = features[i];
+        if (turf.inside(centroid, nextPoly)) {
+            return Math.ceil(nextPoly['properties']['Popn_count']);
+        }
+    }
+    return 0;
 }

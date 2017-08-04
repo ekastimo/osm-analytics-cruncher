@@ -9,16 +9,24 @@ var binningFactor = +process.argv[3] || 100;
 tileReduce({
     map: path.join(__dirname, '/map.js'),
     log: false,
-    sources: [{
-        name: 'osm',
-        mbtiles: mbtilesPath,
-        raw: false
-    }],
+    sources: [
+        {
+            name: 'osm',
+            mbtiles: mbtilesPath,
+            raw: false
+        },
+        {
+            name: 'popn',
+            mbtiles: path.join(__dirname, '../popn.mbtiles'),
+            layers: ['12geojson'],
+            raw: false
+        }
+    ],
     mapOptions: {
         binningFactor: binningFactor
     }
 })
-.on('reduce', function(d) {
-})
-.on('end', function() {
-});
+    .on('reduce', function (d) {
+    })
+    .on('end', function () {
+    });

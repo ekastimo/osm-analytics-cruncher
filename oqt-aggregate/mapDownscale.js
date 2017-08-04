@@ -132,24 +132,32 @@ function processMeta(tile, writeData, done) {
                 ].filter(function (b) { return b; });
                 bin.properties.binX = j;
                 bin.properties.binY = i;
-
+                const useAverages = false;
                 // FSP Computations
-                //_populationDensity, _peoplePerAgent, _economicActivity, _noOfMMAgents, _xcount
-                bin.properties._populationDensity = _bins.reduce(function (prev, _bin) {
-                    return prev + _bin.properties._populationDensity;
-                }, 0);
-                bin.properties._peoplePerAgent = _bins.reduce(function (prev, _bin) {
-                    return prev + _bin.properties._peoplePerAgent;
-                }, 0);
-                bin.properties._economicActivity = _bins.reduce(function (prev, _bin) {
-                    return prev + _bin.properties._economicActivity;
-                }, 0)/_bins.length;// Get Average economic activity value
-                bin.properties._noOfMMAgents = _bins.reduce(function (prev, _bin) {
-                    return prev + _bin.properties._noOfMMAgents;
-                }, 0);
+                if (useAverages) {
+                    //_populationDensity, _peoplePerAgent, _economicActivity, _noOfMMAgents, _xcount
+                    bin.properties._populationDensity = _bins.reduce(function (prev, _bin) {
+                        return prev + _bin.properties._populationDensity;
+                    }, 0) / _bins.length;
+                    bin.properties._peoplePerAgent = _bins.reduce(function (prev, _bin) {
+                        return prev + _bin.properties._peoplePerAgent;
+                    }, 0) / _bins.length;
+                    bin.properties._economicActivity = _bins.reduce(function (prev, _bin) {
+                        return prev + _bin.properties._economicActivity;
+                    }, 0) / _bins.length;// Get Average economic activity value
+                    bin.properties._noOfMMAgents = _bins.reduce(function (prev, _bin) {
+                        return prev + _bin.properties._noOfMMAgents;
+                    }, 0);
+                } else {
+                    bin.properties._populationDensity = stats.max(_bins.map(_bin => _bin.properties._populationDensity));
+                    bin.properties._peoplePerAgent = stats.max(_bins.map(_bin => _bin.properties._peoplePerAgent));
+                    bin.properties._economicActivity = stats.max(_bins.map(_bin => _bin.properties._economicActivity));
+                    bin.properties._noOfMMAgents = stats.max(_bins.map(_bin => _bin.properties._noOfMMAgents));
+                }
+
                 bin.properties._xcount = _bins.reduce(function (prev, _bin) {
                     return prev + _bin.properties._xcount;
-                }, 0);
+                }, 0) / _bins.length;
                 // End of fsp props
 
                 bin.properties._count = _bins.reduce(function (prev, _bin) {
@@ -186,7 +194,7 @@ function processMeta(tile, writeData, done) {
                 bin.properties._userExperienceMin = stats.quantile(experiences, 0.25);
                 bin.properties._userExperienceMax = stats.quantile(experiences, 0.75);
                 bin.properties._userExperiences = lodash.sampleSize(experiences, 16).join(';');
-            
+
                 output.features.push(bin);
             }
         }
@@ -194,7 +202,7 @@ function processMeta(tile, writeData, done) {
             return feature.properties._count > 0;
         });
         // write to stdout
-        writeData(JSON.stringify(output)+'\n');
+        writeData(JSON.stringify(output) + '\n');
         done();
     });
 }
