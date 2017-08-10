@@ -5,9 +5,10 @@ var sphericalmercator = new (require('sphericalmercator'))({ size: 512 });
 var rbush = require('rbush');
 var lodash = require('lodash');
 var stats = require('simple-statistics');
-
+var filter = global.mapOptions.filter || {};
+var fspConfig = filter['fsp'];
+const _MAX_DISTANCE = filter['MAX_DISTANCE'] || 20000;// TODO use more educated constant
 var binningFactor = global.mapOptions.binningFactor; // number of slices in each direction
-
 Array.prototype.scaleBetween = function (scaledMin, scaledMax) {
     var max = Math.max.apply(Math, this);
     var min = Math.min.apply(Math, this);
@@ -16,7 +17,7 @@ Array.prototype.scaleBetween = function (scaledMin, scaledMax) {
 
 module.exports = function (tileLayers, tile, writeData, done) {
     var layer = tileLayers.osm.osm;
-    var popn = tileLayers.popn['12geojson'];
+    var popn = fspConfig ? tileLayers.popn['12geojson'] : {};
     var tileBbox = sphericalmercator.bbox(tile[0], tile[1], tile[2]);
     var bins = [],
         bboxMinXY = sphericalmercator.px([tileBbox[0], tileBbox[1]], tile[2]),
@@ -60,6 +61,7 @@ module.exports = function (tileLayers, tile, writeData, done) {
             clipper = lineclip.polygon;
             geometry = feature.geometry.coordinates[0];
         } else if (feature.geometry.type === 'Point') {
+            // Clipper always retuns true coz a point will always lie in the bin after bintree search
             clipper = function (a, b) { return { length: 1 } };
             geometry = feature.geometry.coordinates;
         } else return;// todo: support more geometry types
@@ -70,11 +72,6 @@ module.exports = function (tileLayers, tile, writeData, done) {
             return clipper(geometry, bin).length > 0;
         });
 
-        const _isBuilding = isBuilding(feature) ? 1 : 0;
-        const _isMMAgent = isMMAgent(feature) ? 1 : 0;
-        const _isHighWay = isHighWay(feature) ? 1 : 0;
-
-        //console.log({_isBuilding,_isMMAgent,_isHighWay,feature:feature.properties});
         // Append feature bins to the rest of bins
         featureBins.forEach(function (bin) {
             var index = bin[4];
@@ -86,14 +83,23 @@ module.exports = function (tileLayers, tile, writeData, done) {
                 });
             }
             if (!binObjects[index]) binObjects[index] = [];
-            binObjects[index].push({
+            var newProps = {
                 //id: feature.properties._osm_way_id, // todo: rels??
                 _timestamp: feature.properties._timestamp,
                 _userExperience: feature.properties._userExperience,
-                _buildingCount: _isBuilding,
-                _mmAgentCount: _isMMAgent,
-                _highwayCount: _isHighWay,
-            });
+            };
+
+            if (fspConfig) {
+                const tagAndAmenityCounts = processComposite(feature);
+                Object.assign(newProps, tagAndAmenityCounts);
+                if (fspConfig === 'qn2') {
+                    const isMM = hasAmenity(feature, 'mobile_money_agent');
+                    const props = feature.properties;
+                    newProps['_distanceFromBank'] = isMM ? props._distanceFromBank : _MAX_DISTANCE;
+                    newProps['_distanceFromATM'] = isMM ? props._distanceFromATM : _MAX_DISTANCE;
+                }
+            }
+            binObjects[index].push(newProps);
         });
     });
 
@@ -120,21 +126,35 @@ module.exports = function (tileLayers, tile, writeData, done) {
         feature.properties._userExperienceMax = stats.quantile(experiences, 0.75);
         feature.properties._userExperiences = lodash.sampleSize(experiences, 16).join(';');
 
+        if (!fspConfig)
+            return;// Ignore FSP Computations
         // FSP Computation
-        // TODO add some kind of filter
-        var noOfBuildings = stats.sum(lodash.map(binObjects[index], '_buildingCount'));
-        var noOfMMAgents = stats.sum(lodash.map(binObjects[index], '_mmAgentCount'));
-        var noOfHighways = stats.sum(lodash.map(binObjects[index], '_highwayCount'));
-        var noOfPeople = getPopulation(feature, popn.features);
-        var peoplePerAgent = (noOfMMAgents <= 0) ? 0 : Math.ceil(noOfPeople / noOfMMAgents);
-        var economicActivity = computeEconActivity(noOfBuildings, noOfMMAgents, noOfHighways, noOfPeople);
+        // TODO Find way of processing via config
+        if (fspConfig === 'qn1') {
+            var noOfBuildings = stats.sum(lodash.map(binObjects[index], '_buildingCount'));
+            var noOfMMAgents = stats.sum(lodash.map(binObjects[index], '_mobile_money_agentCount'));
+            var noOfHighways = stats.sum(lodash.map(binObjects[index], '_highwayCount'));
+            var noOfPeople = getPopulation(feature, popn.features);
+            var peoplePerAgent = (noOfMMAgents <= 0) ? 0 : Math.ceil(noOfPeople / noOfMMAgents);
+            var economicActivity = computeEconActivity(noOfBuildings, noOfMMAgents, noOfHighways, noOfPeople);
 
-        feature.properties._populationDensity = noOfPeople;
-        feature.properties._peoplePerAgent = peoplePerAgent;
-        feature.properties._economicActivity = economicActivity;
-        feature.properties._noOfMMAgents = noOfMMAgents;
-        //console.log({ count: _binCounts[index], noOfBuildings, noOfMMAgents, noOfHighways, noOfPeople, peoplePerAgent, economicActivity });
-        //_populationDensity, _peoplePerAgent, _economicActivity, _noOfMMAgents, _xcount
+            feature.properties._populationDensity = noOfPeople;
+            feature.properties._peoplePerAgent = peoplePerAgent;
+            feature.properties._economicActivity = economicActivity;
+            feature.properties._noOfMMAgents = noOfMMAgents;
+        } else if (fspConfig === 'qn2') {
+            var _bankCount = stats.sum(lodash.map(binObjects[index], '_bankCount'));
+            var noOfMMAgents = stats.sum(lodash.map(binObjects[index], '_mobile_money_agentCount'));
+            // Give the cell the min distance from a bank
+            var _atmDist = stats.min(lodash.map(binObjects[index], '_distanceFromBank'));
+            var _atmDist = stats.min(lodash.map(binObjects[index], '_distanceFromATM'));
+
+            feature.properties._distanceFromBank = _atmDist;
+            feature.properties._distanceFromBank = _atmDist;
+            feature.properties._noOfMMAgents = noOfMMAgents;
+        }
+
+
     });
 
     output.features = output.features.filter(function (feature) {
@@ -147,24 +167,24 @@ module.exports = function (tileLayers, tile, writeData, done) {
 };
 
 
-function isBuilding(f, amenity) {
-    return f.properties['building'] && f.properties['building'] !== 'no';
+function processComposite(feature) {
+    const tagsAndMenities = {};
+    filter.tags.forEach(function (tag) {
+        tagsAndMenities[`_${tag}Count`] = hasTag(feature, tag) ? 1 : 0;
+    });
+    filter.amenities.forEach(function (amenity) {
+        tagsAndMenities[`_${amenity}Count`] = hasAmenity(feature, amenity) ? 1 : 0
+    });
+    return tagsAndMenities;
 }
 
-function isMMAgent(f) {
-    var resp = f.properties['amenity'] && f.properties['amenity'] === "mobile_money_agent";
-    return resp;
+
+function hasAmenity(feature, amenity) {
+    return feature.properties['amenity'] && feature.properties['amenity'] === amenity;
 }
-
-function isHighWay(f) {
-    return f.properties['highway'] && f.properties['highway'] !== 'no';
-}
-
-
-function getRandomInt(min, max) {
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
+// filter
+function hasTag(feature, tag) {
+    return feature.properties[tag] && feature.properties[tag] !== 'no';
 }
 
 

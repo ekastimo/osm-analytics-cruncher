@@ -54,6 +54,8 @@ rm $RESULTS_DIR/highways.mbtiles -f
 mv $RESULTS_DIR/highways.mbtiles.tmp $RESULTS_DIR/highways.mbtiles
 #forever restart $SERVER_SCRIPT
 #rm highways.mbtiles
+
+
 # waterways
 ./crunch.sh planet.mbtiles waterways 32
 cp waterways.mbtiles $RESULTS_DIR/waterways.mbtiles.tmp
@@ -61,5 +63,12 @@ rm $RESULTS_DIR/waterways.mbtiles -f
 mv $RESULTS_DIR/waterways.mbtiles.tmp $RESULTS_DIR/waterways.mbtiles
 #forever restart $SERVER_SCRIPT
 #rm waterways.mbtiles
+
+# mobilemoney
+./crunch.sh planet.mbtiles mobilemoney 32
+cp mobilemoney.mbtiles $RESULTS_DIR/mobilemoney.mbtiles.tmp
+rm $RESULTS_DIR/mobilemoney.mbtiles -f
+mv $RESULTS_DIR/mobilemoney.mbtiles.tmp $RESULTS_DIR/mobilemoney.mbtiles
+
 
 #rm planet.mbtiles

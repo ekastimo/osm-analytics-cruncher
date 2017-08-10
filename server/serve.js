@@ -1,6 +1,7 @@
 const express = require('express');
 const http = require('http');
 const app = express();
+const queue = require('queue-async');
 const tilelive = require('tilelive');
 require('mbtiles').registerProtocols(tilelive);
 
@@ -36,37 +37,29 @@ function initServer(tilesData) {
     });
 }
 
-
-tilelive.load('mbtiles://../results/buildings.mbtiles', function (err, buildings) {
-    if (err) {
-        throw err;
-    }
-
-    tilelive.load('mbtiles://../results/highways.mbtiles', function (err, highways) {
+function loadData(name, callback) {
+    tilelive.load(`mbtiles://../results/${name}.mbtiles`, function (err, buildings) {
         if (err) {
+            console.log(err);
             throw err;
         }
-        tilelive.load('mbtiles://../results/railways.mbtiles', function (err, railways) {
-            if (err) {
-                throw err;
-            }
-            tilelive.load('mbtiles://../results/mobilemoney.mbtiles', function (err, mobilemoney) {
-                if (err) {
-                    throw err;
-                }
-                tilelive.load('mbtiles://../results/generic.mbtiles', function (err, generic) {
-                if (err) {
-                    throw err;
-                }
-                var allData = {};
-                allData['buildings'] = buildings;
-                allData['highways'] = highways;
-                allData['railways'] = railways;
-                allData['mobilemoney'] = mobilemoney;
-                allData['generic'] = generic;
-                initServer(allData);
-            });
-            });
-        });
+        callback(null, { name, data: buildings });
+    })
+}
+
+const tileFiles = ["buildings", "highways", "railways", "mobilemoney", "mmdistbanks"];
+var q = queue();
+tileFiles.forEach(function (file) {
+    q.defer(loadData, file);
+});
+q.awaitAll(function (error, results) {
+    if (error) {
+        throw error;
+    }
+    const allData = {};
+    results.forEach(function (rs) {
+        allData[rs.name] = rs.data;
     });
+    initServer(allData);
+    console.log(`Loaded ${results.length} files`);
 });

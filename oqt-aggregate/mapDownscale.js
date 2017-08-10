@@ -12,6 +12,8 @@ var stats = require('simple-statistics');
 
 var binningFactor = global.mapOptions.binningFactor; // number of slices in each direction
 var mbtilesPath = global.mapOptions.mbtilesPath;
+var filter = global.mapOptions.filter
+var fspConfig = filter['fsp'];
 
 var initQueue = queue(1);
 
@@ -132,28 +134,6 @@ function processMeta(tile, writeData, done) {
                 ].filter(function (b) { return b; });
                 bin.properties.binX = j;
                 bin.properties.binY = i;
-                const useAverages = false;
-                // FSP Computations
-                if (useAverages) {
-                    //_populationDensity, _peoplePerAgent, _economicActivity, _noOfMMAgents, _xcount
-                    bin.properties._populationDensity = _bins.reduce(function (prev, _bin) {
-                        return prev + _bin.properties._populationDensity;
-                    }, 0) / _bins.length;
-                    bin.properties._peoplePerAgent = _bins.reduce(function (prev, _bin) {
-                        return prev + _bin.properties._peoplePerAgent;
-                    }, 0) / _bins.length;
-                    bin.properties._economicActivity = _bins.reduce(function (prev, _bin) {
-                        return prev + _bin.properties._economicActivity;
-                    }, 0) / _bins.length;// Get Average economic activity value
-                    bin.properties._noOfMMAgents = _bins.reduce(function (prev, _bin) {
-                        return prev + _bin.properties._noOfMMAgents;
-                    }, 0);
-                } else {
-                    bin.properties._populationDensity = stats.max(_bins.map(_bin => _bin.properties._populationDensity));
-                    bin.properties._peoplePerAgent = stats.max(_bins.map(_bin => _bin.properties._peoplePerAgent));
-                    bin.properties._economicActivity = stats.max(_bins.map(_bin => _bin.properties._economicActivity));
-                    bin.properties._noOfMMAgents = stats.max(_bins.map(_bin => _bin.properties._noOfMMAgents));
-                }
 
                 bin.properties._xcount = _bins.reduce(function (prev, _bin) {
                     return prev + _bin.properties._xcount;
@@ -195,6 +175,19 @@ function processMeta(tile, writeData, done) {
                 bin.properties._userExperienceMax = stats.quantile(experiences, 0.75);
                 bin.properties._userExperiences = lodash.sampleSize(experiences, 16).join(';');
 
+                // FSP Computation
+                // TODO Find way of processing dynamically
+                if (fspConfig && fspConfig === 'qn1') {
+                    bin.properties._populationDensity = stats.max(_bins.map(_bin => _bin.properties._populationDensity));
+                    bin.properties._peoplePerAgent = stats.max(_bins.map(_bin => _bin.properties._peoplePerAgent));
+                    bin.properties._economicActivity = stats.max(_bins.map(_bin => _bin.properties._economicActivity));
+                    bin.properties._noOfMMAgents = stats.max(_bins.map(_bin => _bin.properties._noOfMMAgents));
+                }
+                else if (fspConfig && fspConfig === 'qn2') {
+                    bin.properties._distanceFromBank = stats.max(_bins.map(_bin => _bin.properties._distanceFromBank));
+                    bin.properties._distanceFromATM = stats.max(_bins.map(_bin => _bin.properties._distanceFromATM));
+                    bin.properties._noOfMMAgents = stats.max(_bins.map(_bin => _bin.properties._noOfMMAgents));
+                }
                 output.features.push(bin);
             }
         }

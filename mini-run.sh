@@ -18,9 +18,9 @@ WORKING_DIR=$PROJECT_DIR/build
 RESULTS_DIR=$PROJECT_DIR/results
 SERVER_SCRIPT=$PROJECT_DIR/server/serve.js
 
-# mobilemoney
-./crunch.sh planet.mbtiles mobilemoney 32
-cp mobilemoney.mbtiles $RESULTS_DIR/mobilemoney.mbtiles.tmp
-rm $RESULTS_DIR/mobilemoney.mbtiles -f
-mv $RESULTS_DIR/mobilemoney.mbtiles.tmp $RESULTS_DIR/mobilemoney.mbtiles
+# mmdistbanks
+./crunch.sh planet.mbtiles mmdistbanks 32
+cp mmdistbanks.mbtiles $RESULTS_DIR/mmdistbanks.mbtiles.tmp
+rm $RESULTS_DIR/mmdistbanks.mbtiles -f
+mv $RESULTS_DIR/mmdistbanks.mbtiles.tmp $RESULTS_DIR/mmdistbanks.mbtiles
 

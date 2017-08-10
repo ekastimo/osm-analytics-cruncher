@@ -3,15 +3,14 @@
     "tag": "building",
     "experience": {
         "file": "./experiences.json",
-        "field": "mobilemoney"
+        "field": "mmdistbanks"
     },
     "amenity": "mobile_money_agent",
     "composite": true,
-    "tags": [
-        "building","highway"
-    ],
+    "tags": [],
     "amenities": [
-        "mobile_money_agent"
+        "mobile_money_agent",
+        "bank","atm"
     ],
-    "fsp": "qn1"
+    "fsp": "qn2"
 }

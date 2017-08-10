@@ -15,10 +15,10 @@ tileReduce({
         raw: false
     }],
     mapOptions: {
-        filterPath: filterPath
+        filterPath: filterPath,
     }
 })
-.on('reduce', function(d) {
-})
-.on('end', function() {
-});
+    .on('reduce', function (d) {
+    })
+    .on('end', function () {
+    });

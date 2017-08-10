@@ -6,6 +6,7 @@
   "dependencies": {
     "express": "^4.13.4",
     "mbtiles": "^0.8.2",
+    "queue-async": "^1.2.1",
     "tilelive": "^5.12.1"
   },
   "devDependencies": {},

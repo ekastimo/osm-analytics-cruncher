@@ -1,8 +1,10 @@
 'use strict';
 var fs = require('fs');
-
+var turf = require('turf');
+var stats = require('simple-statistics');
 var filter = JSON.parse(fs.readFileSync(global.mapOptions.filterPath));
-
+var fspConfig = filter['fsp'];
+const _MAX_DISTANCE = filter['MAX_DISTANCE'] || 20000;// TODO use more educated constant
 var users = {};
 if (filter.experience.file)
     users = JSON.parse(fs.readFileSync(filter.experience.file));
@@ -57,6 +59,40 @@ module.exports = function (tileLayers, tile, writeData, done) {
         return feature.geometry.type === filter.geometry && hasTag(feature, filter.tag);
     });
 
+    if (fspConfig && fspConfig === 'qn2') {
+        function isBank(feature) {
+            return hasAmenity(feature, 'bank');
+        }
+        function isATM(feature) {
+            return hasAmenity(feature, 'atm');
+        }
+        function isMMAgent(feature) {
+            return hasAmenity(feature, 'mobile_money_agent');
+        }
+        // Compute Distance using features in the same tile.
+        // This has a degree of error since it assumes that the feature is in the center of the tile
+        layer.features = layer.features.map(function (feature) {
+            if (isMMAgent(feature)) {
+                var distBanks = [];
+                var distATMs = [];
+                layer.features.forEach(function (feature2) {
+                    const to = (feature2.type === 'Point') ? feature2 : turf.centroid(feature2)
+                    if (isBank(feature2)) {
+                        const distance = turf.distance(feature, to, "kilometers");
+                        distBanks.push(distance * 1000);
+                    } else if (isATM(feature2)) {
+                        const distance = turf.distance(feature, to, "kilometers");
+                        distATMs.push(distance * 1000);
+                    }
+                });
+
+                feature.properties._distanceFromBank = distBanks.length > 0 ? stats.min(distBanks) : _MAX_DISTANCE;
+                feature.properties._distanceFromATM = distATMs.length > 0 ? stats.min(distATMs) : _MAX_DISTANCE;
+            }
+            return feature;
+        });
+    }
+
     // enhance with user experience data
     layer.features.forEach(function (feature) {
         var props = feature.properties;
@@ -64,11 +100,17 @@ module.exports = function (tileLayers, tile, writeData, done) {
         var newProps = {
             _uid: user,
             _timestamp: props['@timestamp'],
+            _name: props['name'],
         };
+        if (fspConfig && fspConfig === 'qn2') {
+            if (props['_distanceFromBank'])
+                newProps['_distanceFromBank'] = props['_distanceFromBank'];
+            if (props['_distanceFromATM'])
+                newProps['_distanceFromATM'] = props['_distanceFromATM'];
+        }
         if (filter.composite) {
             var extraProps = readCompositeProps(feature);
             Object.assign(newProps, extraProps);
-            //console.log(extraProps);
         }
         feature.properties = newProps
         if (users[user] && users[user][filter.experience.field])
@@ -77,7 +119,7 @@ module.exports = function (tileLayers, tile, writeData, done) {
 
     // output
     if (layer.features.length > 0) {
-       writeData(JSON.stringify(layer) + '\n');
+        writeData(JSON.stringify(layer) + '\n');
     }
     done();
 };
