@@ -7,7 +7,7 @@ var lodash = require('lodash');
 var stats = require('simple-statistics');
 var filter = global.mapOptions.filter || {};
 var fspConfig = filter['fsp'];
-const _MAX_DISTANCE = filter['MAX_DISTANCE'] || 20000;// TODO use more educated constant
+const _MAX_DISTANCE = filter['MAX_DISTANCE'] || 200000;// TODO use more educated constant
 var binningFactor = global.mapOptions.binningFactor; // number of slices in each direction
 Array.prototype.scaleBetween = function (scaledMin, scaledMax) {
     var max = Math.max.apply(Math, this);
@@ -146,14 +146,13 @@ module.exports = function (tileLayers, tile, writeData, done) {
             var _bankCount = stats.sum(lodash.map(binObjects[index], '_bankCount'));
             var noOfMMAgents = stats.sum(lodash.map(binObjects[index], '_mobile_money_agentCount'));
             // Give the cell the min distance from a bank
-            var _atmDist = stats.min(lodash.map(binObjects[index], '_distanceFromBank'));
+            var _bankDist = stats.min(lodash.map(binObjects[index], '_distanceFromBank'));
             var _atmDist = stats.min(lodash.map(binObjects[index], '_distanceFromATM'));
 
-            feature.properties._distanceFromBank = _atmDist;
-            feature.properties._distanceFromBank = _atmDist;
+            feature.properties._distanceFromBank = _bankDist;
+            feature.properties._distanceFromATM = _atmDist;
             feature.properties._noOfMMAgents = noOfMMAgents;
         }
-
 
     });
 

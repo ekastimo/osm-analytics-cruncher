@@ -184,8 +184,8 @@ function processMeta(tile, writeData, done) {
                     bin.properties._noOfMMAgents = stats.max(_bins.map(_bin => _bin.properties._noOfMMAgents));
                 }
                 else if (fspConfig && fspConfig === 'qn2') {
-                    bin.properties._distanceFromBank = stats.max(_bins.map(_bin => _bin.properties._distanceFromBank));
-                    bin.properties._distanceFromATM = stats.max(_bins.map(_bin => _bin.properties._distanceFromATM));
+                    bin.properties._distanceFromBank = stats.min(_bins.map(_bin => _bin.properties._distanceFromBank));
+                    bin.properties._distanceFromATM = stats.min(_bins.map(_bin => _bin.properties._distanceFromATM));
                     bin.properties._noOfMMAgents = stats.max(_bins.map(_bin => _bin.properties._noOfMMAgents));
                 }
                 output.features.push(bin);

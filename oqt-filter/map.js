@@ -2,9 +2,12 @@
 var fs = require('fs');
 var turf = require('turf');
 var stats = require('simple-statistics');
+
 var filter = JSON.parse(fs.readFileSync(global.mapOptions.filterPath));
 var fspConfig = filter['fsp'];
-const _MAX_DISTANCE = filter['MAX_DISTANCE'] || 20000;// TODO use more educated constant
+if (fspConfig === "qn2")
+    var bankATMData = require('../banks-atms-data.json');
+const _MAX_DISTANCE = filter['MAX_DISTANCE'] || 200000;// TODO use more educated constant
 var users = {};
 if (filter.experience.file)
     users = JSON.parse(fs.readFileSync(filter.experience.file));
@@ -19,6 +22,15 @@ module.exports = function (tileLayers, tile, writeData, done) {
     // filter
     function hasTag(feature, tag) {
         return feature.properties[tag] && feature.properties[tag] !== 'no';
+    }
+    function isBank(feature) {
+        return hasAmenity(feature, 'bank');
+    }
+    function isATM(feature) {
+        return hasAmenity(feature, 'atm');
+    }
+    function isMMAgent(feature) {
+        return hasAmenity(feature, 'mobile_money_agent');
     }
 
     function processComposite(feature) {
@@ -60,22 +72,12 @@ module.exports = function (tileLayers, tile, writeData, done) {
     });
 
     if (fspConfig && fspConfig === 'qn2') {
-        function isBank(feature) {
-            return hasAmenity(feature, 'bank');
-        }
-        function isATM(feature) {
-            return hasAmenity(feature, 'atm');
-        }
-        function isMMAgent(feature) {
-            return hasAmenity(feature, 'mobile_money_agent');
-        }
         // Compute Distance using features in the same tile.
-        // This has a degree of error since it assumes that the feature is in the center of the tile
         layer.features = layer.features.map(function (feature) {
             if (isMMAgent(feature)) {
                 var distBanks = [];
                 var distATMs = [];
-                layer.features.forEach(function (feature2) {
+                bankATMData.forEach(function (feature2) {
                     const to = (feature2.type === 'Point') ? feature2 : turf.centroid(feature2)
                     if (isBank(feature2)) {
                         const distance = turf.distance(feature, to, "kilometers");
@@ -85,7 +87,6 @@ module.exports = function (tileLayers, tile, writeData, done) {
                         distATMs.push(distance * 1000);
                     }
                 });
-
                 feature.properties._distanceFromBank = distBanks.length > 0 ? stats.min(distBanks) : _MAX_DISTANCE;
                 feature.properties._distanceFromATM = distATMs.length > 0 ? stats.min(distATMs) : _MAX_DISTANCE;
             }
@@ -116,7 +117,6 @@ module.exports = function (tileLayers, tile, writeData, done) {
         if (users[user] && users[user][filter.experience.field])
             feature.properties._userExperience = users[user][filter.experience.field]; // todo: include all/generic experience data?
     });
-
     // output
     if (layer.features.length > 0) {
         writeData(JSON.stringify(layer) + '\n');
