@@ -10,7 +10,14 @@
     "tags": [],
     "amenities": [
         "mobile_money_agent",
-        "bank","atm"
+        "bank",
+        "atm"
+    ],
+    "extraFields": [
+        "_distanceFromBank",
+        "_distanceFromATM",
+        "_bank_",
+        "_atm_"
     ],
     "fsp": "qn2"
 }

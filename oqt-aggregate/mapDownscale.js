@@ -9,7 +9,10 @@ var turf = require('turf');
 var sphericalmercator = new (require('sphericalmercator'))({ size: 512 });
 var lodash = require('lodash');
 var stats = require('simple-statistics');
-
+const utils = require("../utils");
+const selectedBanks = require('../banks-atms-list.json');
+const getBankName = utils.getBankName;
+const getPropsLike = utils.getPropsLike;
 var binningFactor = global.mapOptions.binningFactor; // number of slices in each direction
 var mbtilesPath = global.mapOptions.mbtilesPath;
 var filter = global.mapOptions.filter
@@ -49,7 +52,7 @@ module.exports = function _(tileLayers, tile, writeData, done) {
             if (err) throw err;
 
             getVT = _getVT;
-            // calculate list of 2x2 tiles to process while downscaling
+            // calculate list of 2x2 tiles filterto process while downscaling
             var originalZoom = tilesArray[0][2];
             tilesArray.forEach(function (tile) {
                 var metaX = Math.floor(tile[0] / 2),
@@ -187,12 +190,23 @@ function processMeta(tile, writeData, done) {
                     bin.properties._distanceFromBank = stats.min(_bins.map(_bin => _bin.properties._distanceFromBank));
                     bin.properties._distanceFromATM = stats.min(_bins.map(_bin => _bin.properties._distanceFromATM));
                     bin.properties._noOfMMAgents = stats.max(_bins.map(_bin => _bin.properties._noOfMMAgents));
+
+                    const dynamicProps = ["_distanceFromBank", "_distanceFromATM"];
+                    selectedBanks.forEach(function (bank) {
+                        dynamicProps.push(`_bank_${bank.name}`);
+                        dynamicProps.push(`_atm_${bank.name}`);
+                    });
+                    
+                    dynamicProps.forEach(function (propName) {
+                        const minValue = stats.min(_bins.map(_bin => _bin.properties[propName]));
+                        bin.properties[propName] = minValue;
+                    })
                 }
                 output.features.push(bin);
             }
         }
         output.features = output.features.filter(function (feature) {
-            return feature.properties._count > 0;
+            return feature.properties._xcount > 0;
         });
         // write to stdout
         writeData(JSON.stringify(output) + '\n');

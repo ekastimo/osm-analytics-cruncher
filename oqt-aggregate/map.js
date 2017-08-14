@@ -5,10 +5,22 @@ var sphericalmercator = new (require('sphericalmercator'))({ size: 512 });
 var rbush = require('rbush');
 var lodash = require('lodash');
 var stats = require('simple-statistics');
+
+const utils = require("../utils");
+const getBankName = utils.getBankName;
+const getPropsLike = utils.getPropsLike;
+const hasAmenity = utils.hasAmenity;
+const hasTag = utils.hasTag;
+const readCompositeProps = utils.readCompositeProps;
+const isMMAgent = utils.isMMAgent;
+const isATM = utils.isATM;
+const isBank = utils.isBank;
+const selectedBanks = require('../banks-atms-list.json');
 var filter = global.mapOptions.filter || {};
 var fspConfig = filter['fsp'];
-const _MAX_DISTANCE = filter['MAX_DISTANCE'] || 200000;// TODO use more educated constant
+const _MAX_DISTANCE = filter['MAX_DISTANCE'] || 1000000;// TODO use more educated constant
 var binningFactor = global.mapOptions.binningFactor; // number of slices in each direction
+
 Array.prototype.scaleBetween = function (scaledMin, scaledMax) {
     var max = Math.max.apply(Math, this);
     var min = Math.min.apply(Math, this);
@@ -72,6 +84,25 @@ module.exports = function (tileLayers, tile, writeData, done) {
             return clipper(geometry, bin).length > 0;
         });
 
+        //New props for the feature bins
+        const newProps = {
+            //id: feature.properties._osm_way_id, // todo: rels??
+            _timestamp: feature.properties._timestamp,
+            _userExperience: feature.properties._userExperience,
+        };
+
+        if (fspConfig) {
+            // Used by Qn 1
+            const counts = countTagsAndAmenities(feature);
+            Object.assign(newProps, counts);
+            //Read extra props for qn2
+            if (fspConfig === 'qn2' && isMMAgent(feature)) {
+                const props = feature.properties;
+                const extraProps = readCompositeProps(feature, filter);
+                Object.assign(newProps, extraProps);
+            }
+        }
+
         // Append feature bins to the rest of bins
         featureBins.forEach(function (bin) {
             var index = bin[4];
@@ -82,23 +113,8 @@ module.exports = function (tileLayers, tile, writeData, done) {
                     binDistances[index] += turf.lineDistance(turf.linestring(coords), 'kilometers');
                 });
             }
-            if (!binObjects[index]) binObjects[index] = [];
-            var newProps = {
-                //id: feature.properties._osm_way_id, // todo: rels??
-                _timestamp: feature.properties._timestamp,
-                _userExperience: feature.properties._userExperience,
-            };
-
-            if (fspConfig) {
-                const tagAndAmenityCounts = processComposite(feature);
-                Object.assign(newProps, tagAndAmenityCounts);
-                if (fspConfig === 'qn2') {
-                    const isMM = hasAmenity(feature, 'mobile_money_agent');
-                    const props = feature.properties;
-                    newProps['_distanceFromBank'] = isMM ? props._distanceFromBank : _MAX_DISTANCE;
-                    newProps['_distanceFromATM'] = isMM ? props._distanceFromATM : _MAX_DISTANCE;
-                }
-            }
+            if (!binObjects[index])
+                binObjects[index] = [];
             binObjects[index].push(newProps);
         });
     });
@@ -145,15 +161,22 @@ module.exports = function (tileLayers, tile, writeData, done) {
         } else if (fspConfig === 'qn2') {
             var _bankCount = stats.sum(lodash.map(binObjects[index], '_bankCount'));
             var noOfMMAgents = stats.sum(lodash.map(binObjects[index], '_mobile_money_agentCount'));
-            // Give the cell the min distance from a bank
-            var _bankDist = stats.min(lodash.map(binObjects[index], '_distanceFromBank'));
-            var _atmDist = stats.min(lodash.map(binObjects[index], '_distanceFromATM'));
-
-            feature.properties._distanceFromBank = _bankDist;
-            feature.properties._distanceFromATM = _atmDist;
             feature.properties._noOfMMAgents = noOfMMAgents;
-        }
+            feature.properties._xcount = noOfMMAgents;
 
+            // Give the cell the min distance from a bank
+            // This is computed from the properties agregated during bining
+            const dynamicProps = ["_distanceFromBank", "_distanceFromATM"];
+            selectedBanks.forEach(function (bank) {
+                dynamicProps.push(`_bank_${bank.name}`);
+                dynamicProps.push(`_atm_${bank.name}`);
+            });
+
+            dynamicProps.forEach(function (propName) {
+                const minValue = stats.min(binObjects[index].map(_bin => _bin[propName] || _MAX_DISTANCE));
+                feature.properties[propName] = minValue;
+            })
+        }
     });
 
     output.features = output.features.filter(function (feature) {
@@ -165,8 +188,7 @@ module.exports = function (tileLayers, tile, writeData, done) {
     done();
 };
 
-
-function processComposite(feature) {
+function countTagsAndAmenities(feature) {
     const tagsAndMenities = {};
     filter.tags.forEach(function (tag) {
         tagsAndMenities[`_${tag}Count`] = hasTag(feature, tag) ? 1 : 0;
@@ -176,16 +198,6 @@ function processComposite(feature) {
     });
     return tagsAndMenities;
 }
-
-
-function hasAmenity(feature, amenity) {
-    return feature.properties['amenity'] && feature.properties['amenity'] === amenity;
-}
-// filter
-function hasTag(feature, tag) {
-    return feature.properties[tag] && feature.properties[tag] !== 'no';
-}
-
 
 function getScaled(num, max, min) {
     return [min, num, max].scaleBetween(1, 10)[1];
