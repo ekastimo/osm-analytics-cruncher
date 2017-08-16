@@ -54,7 +54,8 @@ Clone the server(Cruncher) from Github
 make changes to the run file 
 Update the Mbtiles path to download a smaller file instead of all the planet data
 Download vecto tiles from
- curl https://s3.amazonaws.com/mapbox/osm-qa-tiles/latest.country/uganda.mbtiles.gz --silent | gzip -d > planet.mbtiles
+ 
+ `curl https://s3.amazonaws.com/mapbox/osm-qa-tiles/latest.country/uganda.mbtiles.gz --silent | gzip -d > planet.mbtiles`
 
 Update Paths to point to your working directory
 Set results directory to folder inside the working directory
