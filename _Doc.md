@@ -152,8 +152,46 @@ Show coverage of mobile money agents in relation to [population density, economi
  1. Mobile money Agents >> amenity="mobile_money_agent"
  2. Buildings >> tag="building"
  3. Roads >> tag="road"
- 1. Population >> available in geojson
- 1. Economic Activity >> log10(noOfbulding, noOfRoads, population, noOfMMAgents).
+ 4. Population >> available in [geojson]()
+  the original data is from  [worldpop.org](http://www.worldpop.org.uk/data/summary/?doi=10.5258/SOTON/WP00283) 
+  
+ 5. Economic Activity >> 
+ 
+  ```log10(noOfbuldings, noOfRoads, population, noOfMMAgents)```
+ 
+ **Methodology for economic activity data**
+ 
+ OSM data was downloaded.
+ 
+ It was checked to identify the datasets to be used for the project. The point datasets that were used were amenity, craft, leisure, office, shop, tourism.
+ Sport and man-made were not used because the data they contained was not relevant for this study. The polygon datasets that were used were
+ 
+ - Building polygon polygon
+ - Building polygon polygon polygon 1
+ - Building polygon polygon polygon 2
+ - Building polygon polygon polygon 3.
+ 
+ The data was clipped to the extent of Uganda.
+ 
+ All the available data selected for use was grouped into 5 categories
+  - All buildings
+  - Residential
+  - Commercial
+  - Mobile-money
+  - Financial institutions
+ 
+ All this data was linked to the World Pop population dataset for Uganda.
+ 
+ Primary roads were integrated into the dataset. The distance between each cell and the nearest primary road was measured and recorded in the grid.
+ Based on data quality it was decided the certain datasets would not be used as the data was only available for specific areas and would skew the results. The below datasets have been included in this analysis.
+  - All buildings
+  - Commercial buildings
+  - Distance to a primary road
+  - Population
+  
+ The buildings and roads datasets were assigned a value ranging from 1-10 based on their economic impact with 10 being the highest impact.
+ These values were added together and divided by three to get an overall economic rank between 1 and 10.
+ The webmap is available at [World Pop](https://geointelligence.carto.com/builder/4ed3393c-4440-11e7-9bdd-0e3ebc282e83)
  
 Question2
 -----------
