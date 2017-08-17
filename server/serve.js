@@ -1,10 +1,11 @@
+'use strict';
 const express = require('express');
 const http = require('http');
 const app = express();
 const queue = require('queue-async');
 const tilelive = require('tilelive');
 require('mbtiles').registerProtocols(tilelive);
-
+const util = require("./src/index");
 function initServer(tilesData) {
     app.set('port', 7778);
 
@@ -14,6 +15,11 @@ function initServer(tilesData) {
         next();
     });
 
+    app.get('/bankatm/:from/:to', function (req, res) {
+        const from = req.params.from;
+        const to = req.params.to;
+        res.send(util.getAgentsInRange(from, to));
+    });
     app.get(/^\/(\w+)\/(\d+)\/(\d+)\/(\d+).pbf$/, function (req, res) {
         var dataSet = req.params[0];
         var z = req.params[1];

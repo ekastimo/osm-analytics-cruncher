@@ -7,7 +7,9 @@
     "express": "^4.13.4",
     "mbtiles": "^0.8.2",
     "queue-async": "^1.2.1",
-    "tilelive": "^5.12.1"
+    "simple-statistics": "^4.1.1",
+    "tilelive": "^5.12.1",
+    "turf": "^3.0.14"
   },
   "devDependencies": {},
   "scripts": {

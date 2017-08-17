@@ -21,7 +21,7 @@ if (fspConfig === "qn2") {
     var selectedBanks = require('../banks-atms-list.json');
 }
 
-const _MAX_DISTANCE = filter['MAX_DISTANCE'] || 200000;// TODO use more educated constant
+const _MAX_DISTANCE = filter['MAX_DISTANCE'] || 1000000;// TODO use more educated constant
 var users = {};
 if (filter.experience.file)
     users = JSON.parse(fs.readFileSync(filter.experience.file));
@@ -94,8 +94,6 @@ module.exports = function (tileLayers, tile, writeData, done) {
                     const distances = atmCollection[atm];
                     feature.properties[`_atm_${atm}`] = distances.length > 0 ? stats.min(distances) : _MAX_DISTANCE;
                 }
-
-
             }
             return feature;
         });
