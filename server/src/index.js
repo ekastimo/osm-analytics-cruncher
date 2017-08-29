@@ -2,7 +2,7 @@
 var fs = require('fs');
 var turf = require('turf');
 var stats = require('simple-statistics');
-const utils = require("../../utils");
+const utils = require("../../oqt-utils/utils");
 const getBankName = utils.getBankName;
 const getPropsLike = utils.getPropsLike;
 const hasAmenity = utils.hasAmenity;
@@ -16,7 +16,22 @@ var bankATMData = require('../../banks-atms-data.json');
 var mmAgents = require('../../mobilemoneyagents-data.json');
 var mmAgentsEnriched = require('../../mobilemoneyagents-data-enriched.json');
 var selectedBanks = require('../../banks-atms-list.json');
+var population = require('../../population.json');
 const _MAX_DISTANCE = 1000000;
+
+
+function getBankATMCollection() {
+    return {
+        "type": "FeatureCollection",
+        "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+
+        "features": bankATMData
+    }
+}
+
+function readPopulationData(){
+    return population;
+}
 
 function compare(a, b) {
     if (a.count < b.count) {
@@ -107,5 +122,5 @@ function getAgentsInRange(min, max) {
     return { bankCounts, atmCounts };
 }
 
-module.exports = { getInRange, getAgentsInRange };
+module.exports = { getInRange, getAgentsInRange ,getBankATMCollection,readPopulationData};
 //console.log(getAgentsInRange(0, 2000));

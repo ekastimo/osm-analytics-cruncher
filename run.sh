@@ -75,12 +75,23 @@ mv $RESULTS_DIR/mobilemoney.mbtiles.tmp $RESULTS_DIR/mobilemoney.mbtiles
 
 #Generate Banks and ATM json
 FILTER_FILE="banks-atms"
-TIPPECANOE="tippecanoe -b0 -d20 -psfk -fP -t . -l osm -q"
 ./oqt-filter/index.js planet.mbtiles $FILTER_FILE.json | $TIPPECANOE -z 12 -Z 12 -o intermediate/$FILTER_FILE.mbtiles
 # Generate JSON array
 ./oqt-to-json-array/index.js  intermediate/$FILTER_FILE.mbtiles | head -n -1 > $FILTER_FILE-data.json
 #Append Clossing brace
 echo "]" >> $FILTER_FILE-data.json
+
+
+FILTER_FILE="mobilemoneyagents"
+./oqt-filter/index.js results/mmdistbanks.mbtiles $FILTER_FILE.json | $TIPPECANOE -z 12 -Z 12 -o intermediate/$FILTER_FILE.mbtiles
+# Generate JSON array
+./oqt-to-json-array/index.js  intermediate/$FILTER_FILE.mbtiles | head -n -1 > $FILTER_FILE-data.json
+#Append Clossing brace
+echo "]" >> $FILTER_FILE-data.json
+
+./oqt-custom/mmBankDistance.js | head -n -1  > $FILTER_FILE-data-enriched.json
+#Append Clossing brace
+echo "]" >> $FILTER_FILE-data-enriched.json
 
 
 ./crunch.sh planet.mbtiles mmdistbanks 32

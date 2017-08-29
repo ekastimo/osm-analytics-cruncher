@@ -64,6 +64,7 @@ module.exports = function (tileLayers, tile, writeData, done) {
     binTree.load(bins);
 
     layer.features.forEach(function (feature) {
+        //console.log(feature);
         var clipper,
             geometry;
         if (feature.geometry.type === 'LineString') {
@@ -76,8 +77,10 @@ module.exports = function (tileLayers, tile, writeData, done) {
             // Clipper always retuns true coz a point will always lie in the bin after bintree search
             clipper = function (a, b) { return { length: 1 } };
             geometry = feature.geometry.coordinates;
+        } else if (feature.geometry.type === 'MultiPolygon') {
+            clipper = lineclip.polygon;
+            geometry = feature.geometry.coordinates[0][0];
         } else return;// todo: support more geometry types
-
 
         var featureBbox = turf.extent(feature);
         var featureBins = binTree.search(featureBbox).filter(function (bin) {
@@ -92,7 +95,7 @@ module.exports = function (tileLayers, tile, writeData, done) {
         };
 
         if (fspConfig) {
-            // Used by Qn 1
+            // Used by Qn 1 and 3
             const counts = countTagsAndAmenities(feature);
             Object.assign(newProps, counts);
             //Read extra props for qn2
@@ -128,7 +131,8 @@ module.exports = function (tileLayers, tile, writeData, done) {
         feature.properties._xcount = _binCounts[index];
         feature.properties._lineDistance = binDistances[index];
 
-        if (!(binCounts[index] > 0)) return;
+        if (!(binCounts[index] > 0))
+            return;
         feature.properties._timestamp = lodash.meanBy(binObjects[index], '_timestamp'); // todo: don't hardcode properties to average?
         feature.properties._userExperience = lodash.meanBy(binObjects[index], '_userExperience');
         //feature.properties.osm_way_ids = binObjects[index].map(function(o) { return o.id; }).join(';');
