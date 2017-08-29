@@ -6,7 +6,7 @@ var rbush = require('rbush');
 var lodash = require('lodash');
 var stats = require('simple-statistics');
 
-const utils = require("../utils");
+const utils = require("../oqt-utils/utils");
 const getBankName = utils.getBankName;
 const getPropsLike = utils.getPropsLike;
 const hasAmenity = utils.hasAmenity;

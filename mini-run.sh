@@ -19,9 +19,30 @@ RESULTS_DIR=$PROJECT_DIR/results
 SERVER_SCRIPT=$PROJECT_DIR/server/serve.js
 TIPPECANOE="tippecanoe -b0 -d20 -psfk -fP -t . -l osm -q"
 
-# popnbankatm
+# mmdistbanks
 
-./crunch.sh planet.mbtiles popnbankatm 32
-cp popnbankatm.mbtiles $RESULTS_DIR/popnbankatm.mbtiles.tmp
-rm $RESULTS_DIR/popnbankatm.mbtiles -f
-mv $RESULTS_DIR/popnbankatm.mbtiles.tmp $RESULTS_DIR/popnbankatm.mbtiles
+#Generate Banks and ATM json
+FILTER_FILE="banks-atms"
+./oqt-filter/index.js planet.mbtiles $FILTER_FILE.json | $TIPPECANOE -z 12 -Z 12 -o intermediate/$FILTER_FILE.mbtiles
+# Generate JSON array
+./oqt-to-json-array/index.js  intermediate/$FILTER_FILE.mbtiles | head -n -1 > $FILTER_FILE-data.json
+#Append Clossing brace
+echo "]" >> $FILTER_FILE-data.json
+
+
+FILTER_FILE="mobilemoneyagents"
+./oqt-filter/index.js results/mmdistbanks.mbtiles $FILTER_FILE.json | $TIPPECANOE -z 12 -Z 12 -o intermediate/$FILTER_FILE.mbtiles
+# Generate JSON array
+./oqt-to-json-array/index.js  intermediate/$FILTER_FILE.mbtiles | head -n -1 > $FILTER_FILE-data.json
+#Append Clossing brace
+echo "]" >> $FILTER_FILE-data.json
+
+./oqt-custom/mmBankDistance.js | head -n -1  > $FILTER_FILE-data-enriched.json
+#Append Clossing brace
+echo "]" >> $FILTER_FILE-data-enriched.json
+
+
+./crunch.sh planet.mbtiles mmdistbanks 32
+cp mmdistbanks.mbtiles $RESULTS_DIR/mmdistbanks.mbtiles.tmp
+rm $RESULTS_DIR/mmdistbanks.mbtiles -f
+mv $RESULTS_DIR/mmdistbanks.mbtiles.tmp $RESULTS_DIR/mmdistbanks.mbtiles
