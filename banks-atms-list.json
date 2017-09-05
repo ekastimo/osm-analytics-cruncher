@@ -112,7 +112,7 @@
     {
         "name": "UBA Bank",
         "tags": [
-            "UBA"
+            "UBA","United Bank for Africa"
         ]
     },
     {
@@ -139,6 +139,48 @@
         "tags": [
             "EcoBank",
             "Eco Bank"
+        ]
+    },
+    {
+        "name": "ABC Bank",
+        "tags": [
+            "ABC Bank"
+        ]
+    },
+    {
+        "name": "Bank of India",
+        "tags": [
+            "Bank of India"
+        ]
+    },
+    {
+        "name": "Cairo International Bank",
+        "tags": [
+            "Cairo","Cairo International"
+        ]
+    },
+    {
+        "name": "Citibank Uganda",
+        "tags": [
+            "Citibank Uganda","Citibank Uganda"
+        ]
+    },
+    {
+        "name": "Exim Bank",
+        "tags": [
+            "Exim Bank"
+        ]
+    },
+    {
+        "name": "NC Bank",
+        "tags": [
+            "NC Bank"
+        ]
+    },
+    {
+        "name": "Tropical Bank",
+        "tags": [
+            "Tropical Bank","Tropical"
         ]
     },
     {

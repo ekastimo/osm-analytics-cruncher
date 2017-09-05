@@ -4,6 +4,7 @@ const http = require('http');
 const app = express();
 const queue = require('queue-async');
 const tilelive = require('tilelive');
+var fs = require('fs');
 require('mbtiles').registerProtocols(tilelive);
 const util = require("./src/index");
 function initServer(tilesData) {
@@ -14,6 +15,8 @@ function initServer(tilesData) {
         res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
         next();
     });
+
+    app.use(express.static('../results'))
 
     app.get('/bankatm/:from/:to', function (req, res) {
         const from = req.params.from;
@@ -60,7 +63,11 @@ function loadData(name, callback) {
     })
 }
 
-const tileFiles = ["buildings", "highways", "railways", "mobilemoney", "mmdistbanks", "popnbankatm","population","pimpedpopn"];
+
+
+const tileFiles = ["buildings", "highways", "railways", "mobilemoney", "mmdistbanks", "popnbankatm","population","pimpedpopn","mybanks","fspdistribution"];
+
+
 var q = queue();
 tileFiles.forEach(function (file) {
     q.defer(loadData, file);

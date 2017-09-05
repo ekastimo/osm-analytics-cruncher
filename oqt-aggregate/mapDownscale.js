@@ -202,6 +202,15 @@ function processMeta(tile, writeData, done) {
                         bin.properties[propName] = minValue;
                     })
                 }
+                if (fspConfig && fspConfig === 'qn4') {
+                    const keys = ['mobile_money_agent', 'bank', 'atm', 'credit_institution', 'icrofinance_bank', 'microfinance', 'sacco', 'bureau_de_change', 'money_transfer', 'post_office'];
+                    keys.forEach((key) => {
+                        const countkey = `_${key}Count`;
+                        const peoplekey = `_per_${key}Count`;
+                        bin.properties[countkey] = stats.max(_bins.map(_bin => _bin.properties[countkey]));
+                        bin.properties[peoplekey] = stats.max(_bins.map(_bin => _bin.properties[peoplekey]));
+                    })                    
+                }
                 output.features.push(bin);
             }
         }

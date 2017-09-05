@@ -180,6 +180,18 @@ module.exports = function (tileLayers, tile, writeData, done) {
                 const minValue = stats.min(binObjects[index].map(_bin => _bin[propName] || _MAX_DISTANCE));
                 feature.properties[propName] = minValue;
             })
+        } else if (fspConfig === 'qn4') {
+            const keys = ['mobile_money_agent', 'bank', 'atm', 'credit_institution', 'icrofinance_bank', 'microfinance', 'sacco', 'bureau_de_change', 'money_transfer', 'post_office'];
+            const counts = {};
+            var noOfPeople = getPopulation(feature, popn.features);
+            keys.forEach((key) => {
+                const contkey = `_${key}Count`;
+                const peoplekey = `_per_${key}Count`;
+                const countValue = stats.sum(lodash.map(binObjects[index], contkey));
+                counts[contkey] = countValue;
+                counts[peoplekey] = noOfPeople / countValue;
+            })
+            Object.assign(feature.properties, counts);
         }
     });
 

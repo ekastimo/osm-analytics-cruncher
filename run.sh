@@ -41,10 +41,10 @@ function cleanup {
 
 # generate osm-analytics data
 # buildings
-./crunch.sh planet.mbtiles buildings 64
-cp buildings.mbtiles $RESULTS_DIR/buildings.mbtiles.tmp
-rm $RESULTS_DIR/buildings.mbtiles -f
-mv $RESULTS_DIR/buildings.mbtiles.tmp $RESULTS_DIR/buildings.mbtiles
+#./crunch.sh planet.mbtiles buildings 64
+#cp buildings.mbtiles $RESULTS_DIR/buildings.mbtiles.tmp
+#rm $RESULTS_DIR/buildings.mbtiles -f
+#mv $RESULTS_DIR/buildings.mbtiles.tmp $RESULTS_DIR/buildings.mbtiles
 #forever restart $SERVER_SCRIPT
 #rm buildings.mbtiles
 # highways
