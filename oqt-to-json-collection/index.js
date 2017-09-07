@@ -19,7 +19,7 @@ tileReduce({
     }
 })
     .on('start', function () {
-        console.log('[');
+        console.log('{"type":"FeatureCollection","crs":{"type":"name","properties":{"name":"urn:ogc:def:crs:OGC:1.3:CRS84"}},"features":[');
     })
     .on('end', function () {
     });
