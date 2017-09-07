@@ -1,17 +1,7 @@
 {
-      "tags": [
-    ],
+    "composite": true,
+    "tags": [],
     "amenities": [
-        "mobile_money_agent",
-        "bank",
-        "atm",
-        "microfinance_bank",
-        "credit_institution",
-        "microfinance",
-        "sacco",
-        "bureau_de_change",
-        "money_transfer",
-        "post_office"
-    ],
-    "fsp": "qn4"
+        "atm"
+    ]
 }
