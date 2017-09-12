@@ -19,6 +19,10 @@ const hasTag = function (feature, tag) {
     return feature.properties[tag] && feature.properties[tag] !== 'no';
 }
 
+const hasGeometry = function (feature, geometry) {
+    return feature.geometry.type === geometry;
+}
+
 const getPropLike = function (feature, prop) {
     const keys = Object.keys(feature.properties);
     for (let i = 0; i < keys.length; i++) {
@@ -168,6 +172,7 @@ function computeEconActivity(noOfBuildings, noOfMMAgents, noOfHighways, noOfPeop
 module.exports = {
     hasAmenity,
     hasTag,
+    hasGeometry,
     getBankName,
     getPropLike,
     getPropsLike,

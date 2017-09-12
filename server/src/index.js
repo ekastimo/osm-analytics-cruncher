@@ -12,11 +12,16 @@ const isMMAgent = utils.isMMAgent;
 const isATM = utils.isATM;
 const isBank = utils.isBank;
 
-var bankATMData = require('../../banks-atms-data.json');
+/*
 var mmAgents = require('../../mobilemoneyagents-data.json');
 var mmAgentsEnriched = require('../../mobilemoneyagents-data-enriched.json');
 var selectedBanks = require('../../banks-atms-list.json');
 var population = require('../../population.json');
+*/
+var mmAgents = [];
+var mmAgentsEnriched = [];
+var selectedBanks = [];
+var population = [];
 const _MAX_DISTANCE = 1000000;
 
 
@@ -29,7 +34,7 @@ function getBankATMCollection() {
     }
 }
 
-function readPopulationData(){
+function readPopulationData() {
     return population;
 }
 
@@ -122,5 +127,5 @@ function getAgentsInRange(min, max) {
     return { bankCounts, atmCounts };
 }
 
-module.exports = { getInRange, getAgentsInRange ,getBankATMCollection,readPopulationData};
+module.exports = { getInRange, getAgentsInRange, getBankATMCollection, readPopulationData };
 //console.log(getAgentsInRange(0, 2000));

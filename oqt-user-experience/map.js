@@ -1,25 +1,65 @@
 'use strict';
 var turf = require('turf');
+var fs = require('fs');
+var utils = require('../oqt-utils/utils');
+
+
+var config = global.mapOptions.config
+var filters = {};
+config.forEach(function (filter) {
+    filters[filter] = JSON.parse(fs.readFileSync(`./osm-filters/${filter}.json`));
+});
 
 // Filter features touched by list of users defined by users.json
-module.exports = function(tileLayers, tile, writeData, done) {
+module.exports = function (tileLayers, tile, writeData, done) {
     var layer = tileLayers.osm.osm;
     var users = {};
-
-    layer.features.forEach(function(val) {
+    layer.features.forEach(function (val) {
         var user = val.properties['@uid'];
-        if (!users[user])
-            users[user] = { objects:0, highways: 0.0, waterways: 0.0, buildings: 0 };
+        if (!users[user]) {
+            const obj = { objects: 0 };
+            config.forEach(function (conf) {
+                obj[conf] = 0.0
+            });
+            users[user] = obj;
+        }
         users[user].objects += 1;
-        if (val.properties.highway && val.geometry.type === "LineString")
-            users[user].highways += turf.lineDistance(val, "kilometers");
-        if (val.properties.waterway && val.geometry.type === "LineString")
-            users[user].waterways += turf.lineDistance(val, "kilometers");
-        if (val.properties.building && val.geometry.type !== "Point")
-            users[user].buildings += 1;
-        if (val.properties.amenity && val.properties.amenity ==="mobile_money_agent" && val.geometry.type !== "Point")
-            users[user].mobilemoney += 1;
+        const exp = processExperience(val, config)
+        
+        config.forEach(function (conf) {
+            users[user][conf] += exp[conf]
+        });
     });
-
     done(null, users);
 };
+
+
+// Go thru each tag and return object with only one count value and the rest 0
+function processExperience(feature, config) {
+    const expData = {};
+    config.forEach(function (conf) {
+        expData[conf] = 0.0
+    });
+    config.forEach(function (conf) {
+        const filter = filters[conf];
+        const geometry = filter.geometry
+        const tag = filter.tag
+        const amenity = filter.amenity
+        if (tag && utils.hasTag(feature, tag) && utils.hasGeometry(feature, geometry)) {
+            expData[conf] += computeExperience(feature, geometry)
+        }
+    });
+    return expData;
+}
+
+function computeExperience(feature, geometry) {
+    // This can be made more intelligent
+    if (geometry === "LineString")
+        return turf.lineDistance(feature, "kilometers");
+    else if (geometry === "Point")
+        return 1;
+    else
+        return 1;
+}
+
+

@@ -15,7 +15,7 @@ tileReduce({
         raw: false
     }],
     mapOptions: {
-        filterPath: filterPath,
+        filterPath: `osm-filters/${filterPath}`,
     }
 })
     .on('reduce', function (d) {

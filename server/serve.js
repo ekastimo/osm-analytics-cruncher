@@ -23,9 +23,7 @@ function initServer(tilesData) {
         const to = req.params.to;
         res.send(util.getAgentsInRange(from, to));
     });
-    app.get('/bankatmdata', function (req, res) {
-        res.send(util.getBankATMCollection());
-    });
+
 
     app.get('/populationdata', function (req, res) {
         res.send(util.readPopulationData());
@@ -65,7 +63,7 @@ function loadData(name, callback) {
 
 
 
-const tileFiles = ["buildings", "highways", "railways", "mobilemoney", "mmdistbanks", "popnbankatm","population","pimpedpopn","mybanks","fspdistribution"];
+const tileFiles = ["buildings", "highways", "railways", "mobilemoney","waterways", "mmdistbanks", "popnbankatm","population","pimpedpopn","mybanks","fspdistribution"];
 
 
 var q = queue();

@@ -50,8 +50,10 @@ module.exports = function (tileLayers, tile, writeData, done) {
         }
         return feature.geometry.type === filter.geometry && hasTag(feature, filter.tag);
     });
+
+
+    
     if (fspConfig && fspConfig === 'qn2') {
-        // Compute Distance using features in the same tile.
         layer.features = layer.features.map(function (feature) {
             if (isMMAgent(feature)) {
                 var distBanks = [];
