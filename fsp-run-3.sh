@@ -20,8 +20,8 @@ SERVER_SCRIPT=$PROJECT_DIR/server/serve.js
 TIPPECANOE="tippecanoe -b0 -d20 -psfk -fP -t . -l osm -q"
 
 
-# mobilemoney
-./crunch.sh planet.mbtiles mobilemoney 32
-cp mobilemoney.mbtiles $RESULTS_DIR/mobilemoney.mbtiles.tmp
-rm $RESULTS_DIR/mobilemoney.mbtiles -f
-mv $RESULTS_DIR/mobilemoney.mbtiles.tmp $RESULTS_DIR/mobilemoney.mbtiles
+# popnbankatm
+./crunch.sh planet.mbtiles popnbankatm 32 FSP
+cp popnbankatm.mbtiles $RESULTS_DIR/popnbankatm.mbtiles.tmp
+rm $RESULTS_DIR/popnbankatm.mbtiles -f
+mv $RESULTS_DIR/popnbankatm.mbtiles.tmp $RESULTS_DIR/popnbankatm.mbtiles

@@ -1,6 +1,7 @@
 {
     "geometry": "Point",
     "tag": "building",
+    "id": "popnbankatm",
     "experience": {
         "file": "./experiences.json",
         "field": "mobilemoney"
@@ -8,7 +9,8 @@
     "amenity": "mobile_money_agent",
     "composite": true,
     "tags": [
-        "building","highway"
+        "building",
+        "highway"
     ],
     "amenities": [
         "mobile_money_agent"

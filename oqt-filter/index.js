@@ -4,7 +4,8 @@ var tileReduce = require('tile-reduce');
 var path = require('path');
 
 var mbtilesPath = process.argv[2] || "osm.mbtiles",
-    filterPath = process.argv[3] || './filter.json';
+    filterPath = process.argv[3] || './filter.json',
+    fsp = process.argv[4] || false;
 
 tileReduce({
     map: path.join(__dirname, '/map.js'),
@@ -15,7 +16,7 @@ tileReduce({
         raw: false
     }],
     mapOptions: {
-        filterPath: `osm-filters/${filterPath}`,
+        filterPath: fsp ? `fsp-filters/${filterPath}` : `osm-filters/${filterPath}`,
     }
 })
     .on('reduce', function (d) {

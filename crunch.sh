@@ -10,14 +10,14 @@ BINNINGFACTOR=${3:-64}
 mkdir -p intermediate
 
 # apply filter, merge with user experience data
-./oqt-filter/index.js $1 $2.json $FSP | $TIPPECANOE -z 12 -Z 12 -o intermediate/$2.mbtiles
+./oqt-filter/index.js $1 $2.json $4 | $TIPPECANOE -z 12 -Z 12 -o intermediate/$2.mbtiles
 
 # aggregate to bins
-./oqt-aggregate/index.js intermediate/$2.mbtiles $BINNINGFACTOR $2.json | $TIPPECANOE -z 12 -Z 12 -o intermediate/$2.z12.mbtiles
+./oqt-aggregate/index.js intermediate/$2.mbtiles $BINNINGFACTOR $2.json $4| $TIPPECANOE -z 12 -Z 12 -o intermediate/$2.z12.mbtiles
 
 # downscale bins to zoom levels 11 to 0
 for i in {11..0}; do
-    ./oqt-aggregate/downscale.js intermediate/$2.z$((i+1)).mbtiles $BINNINGFACTOR $2.json  | $TIPPECANOE -z $i -Z $i -o intermediate/$2.z$i.mbtiles
+    ./oqt-aggregate/downscale.js intermediate/$2.z$((i+1)).mbtiles $BINNINGFACTOR $2.json $4| $TIPPECANOE -z $i -Z $i -o intermediate/$2.z$i.mbtiles
 done
 
 # create z13-z14 tiles for raw data and merge in aggredate data zoom levels

@@ -7,8 +7,9 @@ var fs = require('fs');
 var mbtilesPath = process.argv[2] || "osm.mbtiles";
 var binningFactor = +process.argv[3] || 100;
 var filterPath = process.argv[4] || './filter.json';
+var fsp = process.argv[5] || false;
 
-var filter = JSON.parse(fs.readFileSync(`osm-filters/${filterPath}`));
+var filter = JSON.parse(fs.readFileSync(fsp ? `fsp-filters/${filterPath}` : `osm-filters/${filterPath}`));
 var fspConfig = filter['fsp'];
 var sources = [
     {
@@ -22,8 +23,8 @@ if (fspConfig) {
     sources.push(
         {
             name: 'popn',
-            mbtiles: path.join(__dirname, '../popn.mbtiles'),
-            layers: ['12geojson'],
+            mbtiles: path.join(__dirname, '../population.mbtiles'),
+            layers: ['population'],
             raw: false
         }
     );

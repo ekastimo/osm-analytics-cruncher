@@ -6,7 +6,7 @@ const queue = require('queue-async');
 const tilelive = require('tilelive');
 var fs = require('fs');
 require('mbtiles').registerProtocols(tilelive);
-const util = require("./src/index");
+const util = require("./src/util");
 function initServer(tilesData) {
     app.set('port', 7778);
 

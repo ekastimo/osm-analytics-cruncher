@@ -4,7 +4,7 @@ var tileReduce = require('tile-reduce');
 var path = require('path');
 
 var mbtilesPath = process.argv[2] || "osm.mbtiles",
-filterPath = process.argv[3] || './filter.json';
+filterPath = process.argv[3] || false;
 
 tileReduce({
     map: path.join(__dirname, '/map.js'),

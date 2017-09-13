@@ -17,11 +17,19 @@ const isBank = utils.isBank;
 var filter = JSON.parse(fs.readFileSync(global.mapOptions.filterPath));
 var fspConfig = filter['fsp'];
 if (fspConfig === "qn2") {
-    var bankATMData = require('../banks-atms-data.json');
-    var selectedBanks = require('../banks-atms-list.json');
+    var fspUtils = require(`../fsp-filters/${filter.id}`)
+    var _MAX_DISTANCE = fspUtils['max-distance'] || 1000000;
+    var mainFeature = fspUtils.main
+    var distances = fspUtils.distances
+    var compareFeatures = {}
+    distances.forEach(function (distance) {
+        compareFeatures[distance.name] = require(`../results/json/${distance.name}.json`)
+    });
 }
 
-const _MAX_DISTANCE = filter['MAX_DISTANCE'] || 1000000;// TODO use more educated constant
+
+// TODO use more educated constant
+
 var users = {};
 if (filter.experience.file)
     users = JSON.parse(fs.readFileSync(filter.experience.file));
@@ -51,51 +59,30 @@ module.exports = function (tileLayers, tile, writeData, done) {
         return feature.geometry.type === filter.geometry && hasTag(feature, filter.tag);
     });
 
-
-    
     if (fspConfig && fspConfig === 'qn2') {
         layer.features = layer.features.map(function (feature) {
-            if (isMMAgent(feature)) {
-                var distBanks = [];
-                var distATMs = [];
-                var bankCollection = {};
-                var atmCollection = {};
-                bankATMData.forEach(function (feature2) {
-                    const to = (feature2.type === 'Point') ? feature2 : turf.centroid(feature2)
-                    if (isBank(feature2)) {
-                        const distance = turf.distance(feature, to, "kilometers");
-                        const _distance = distance * 1000;//Convert to meters
-                        distBanks.push(_distance);
-                        const rawName = feature2.properties._name;
-                        const bankName = rawName ? getBankName(rawName, selectedBanks) : 'unknown';
-                        if (bankCollection[bankName]) {
-                            bankCollection[bankName].push(_distance);
+            if (mainFeature.checker(feature)) {
+                distances.forEach((conf) => {
+                    const distanceCollection = {};
+                    const genDistances = [];
+                    const features = compareFeatures[conf.name].features;
+                    features.forEach(function (feature2) {
+                        const to = (feature2.type === 'Point') ? feature2 : turf.centroid(feature2)
+                        const distance = turf.distance(feature, to, "kilometers") * 1000;//Convert to meters
+                        genDistances.push(distance);
+                        const name = conf.getName(feature2)
+                        if (distanceCollection[name]) {
+                            distanceCollection[name].push(distance);
                         } else {
-                            bankCollection[bankName] = [_distance];
+                            distanceCollection[name] = [distance];
                         }
-                    } else if (isATM(feature2)) {
-                        const distance = turf.distance(feature, to, "kilometers");
-                        const _distance = distance * 1000;//Convert to meters
-                        distATMs.push(_distance);
-                        const rawName = feature2.properties._name;
-                        const atmName = rawName ? getBankName(rawName, selectedBanks) : 'unknown';
-                        if (atmCollection[atmName]) {
-                            atmCollection[atmName].push(_distance);
-                        } else {
-                            atmCollection[atmName] = [_distance];
-                        }
+                    });
+                    feature.properties[conf.propName] = genDistances.length > 0 ? stats.min(genDistances) : _MAX_DISTANCE;
+                    for (let name in distanceCollection) {
+                        const _distanceArray = distanceCollection[name];
+                        feature.properties[`${conf.propNameSurfix}${name}`] = _distanceArray.length > 0 ? stats.min(_distanceArray) : _MAX_DISTANCE;
                     }
-                });
-                feature.properties._distanceFromBank = distBanks.length > 0 ? stats.min(distBanks) : _MAX_DISTANCE;
-                feature.properties._distanceFromATM = distATMs.length > 0 ? stats.min(distATMs) : _MAX_DISTANCE;
-                for (let bank in bankCollection) {
-                    const distances = bankCollection[bank];
-                    feature.properties[`_bank_${bank}`] = distances.length > 0 ? stats.min(distances) : _MAX_DISTANCE;
-                }
-                for (let atm in atmCollection) {
-                    const distances = atmCollection[atm];
-                    feature.properties[`_atm_${atm}`] = distances.length > 0 ? stats.min(distances) : _MAX_DISTANCE;
-                }
+                })
             }
             return feature;
         });

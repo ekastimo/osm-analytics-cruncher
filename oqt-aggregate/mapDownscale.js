@@ -17,7 +17,9 @@ var binningFactor = global.mapOptions.binningFactor; // number of slices in each
 var mbtilesPath = global.mapOptions.mbtilesPath;
 var filter = global.mapOptions.filter
 var fspConfig = filter['fsp'];
-
+if (fspConfig) {
+    var fspUtils = require(`../fsp-filters/${filter.id}`)
+}
 var initQueue = queue(1);
 
 initQueue.defer(mbtiles, {
@@ -179,46 +181,32 @@ function processMeta(tile, writeData, done) {
                 bin.properties._userExperiences = lodash.sampleSize(experiences, 16).join(';');
 
                 // FSP Computation
-                // TODO Find way of processing dynamically
-                if (fspConfig && fspConfig === 'qn1') {
-                    bin.properties._populationDensity = stats.max(_bins.map(_bin => _bin.properties._populationDensity));
-                    bin.properties._peoplePerAgent = stats.max(_bins.map(_bin => _bin.properties._peoplePerAgent));
-                    bin.properties._economicActivity = stats.max(_bins.map(_bin => _bin.properties._economicActivity));
-                    bin.properties._noOfMMAgents = stats.max(_bins.map(_bin => _bin.properties._noOfMMAgents));
-                }
-                else if (fspConfig && fspConfig === 'qn2') {
-                    bin.properties._distanceFromBank = stats.min(_bins.map(_bin => _bin.properties._distanceFromBank));
-                    bin.properties._distanceFromATM = stats.min(_bins.map(_bin => _bin.properties._distanceFromATM));
-                    bin.properties._noOfMMAgents = stats.max(_bins.map(_bin => _bin.properties._noOfMMAgents));
-
-                    const dynamicProps = ["_distanceFromBank", "_distanceFromATM"];
-                    selectedBanks.forEach(function (bank) {
-                        dynamicProps.push(`_bank_${bank.name}`);
-                        dynamicProps.push(`_atm_${bank.name}`);
-                    });
-                    
-                    dynamicProps.forEach(function (propName) {
+                if (fspConfig && notEpmty(_bins)) {
+                    fspUtils.downscale.min && fspUtils.downscale.min.forEach(function (propName) {
                         const minValue = stats.min(_bins.map(_bin => _bin.properties[propName]));
                         bin.properties[propName] = minValue;
                     })
-                }
-                if (fspConfig && fspConfig === 'qn4') {
-                    const keys = ['mobile_money_agent', 'bank', 'atm', 'credit_institution', 'icrofinance_bank', 'microfinance', 'sacco', 'bureau_de_change', 'money_transfer', 'post_office'];
-                    keys.forEach((key) => {
-                        const countkey = `_${key}Count`;
-                        const peoplekey = `_per_${key}Count`;
-                        bin.properties[countkey] = stats.max(_bins.map(_bin => _bin.properties[countkey]));
-                        bin.properties[peoplekey] = stats.max(_bins.map(_bin => _bin.properties[peoplekey]));
-                    })                    
+
+                    fspUtils.downscale.min && fspUtils.downscale.min.forEach(function (propName) {
+                        bin.properties[propName] = stats.min(_bins.map(_bin => _bin.properties[propName]));
+                    })
+
+                    fspUtils.downscale.max && fspUtils.downscale.max.forEach(function (propName) {
+                        bin.properties[propName] = stats.max(_bins.map(_bin => _bin.properties[propName]));
+                    })
                 }
                 output.features.push(bin);
             }
         }
         output.features = output.features.filter(function (feature) {
-            return feature.properties._xcount > 0;
+            const counter = fspConfig ? '_xcount' : '_count'
+            return feature.properties[counter] > 0;
         });
-        // write to stdout
         writeData(JSON.stringify(output) + '\n');
         done();
     });
+}
+
+function notEpmty(arr) {
+    return arr.length > 0
 }

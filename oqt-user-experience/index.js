@@ -2,7 +2,7 @@
 'use strict';
 var tileReduce = require('tile-reduce');
 var path = require('path');
-var config = require("../osm-filters/config.json");
+var config = require("../osm-filters/config-all.json");
 var mbtilesPath = process.argv[2] || "osm.mbtiles";
 
 var users = {};
@@ -22,14 +22,14 @@ tileReduce({
         for (var u in d) {
             if (!users[u]) {
                 const obj = { objects: 0 };
-                config.forEach(function (filter) {
-                    obj[filter] = 0.0
+                config.forEach(function (conf) {
+                    obj[conf.name] = 0.0
                 });
                 users[u] = obj
             }
             users[u].objects += d[u].objects;
-            config.forEach(function (filter) {
-                users[u][filter] += d[u][filter]
+            config.forEach(function (conf) {
+                users[u][conf.name] += d[u][conf.name]
             });
         }
     })

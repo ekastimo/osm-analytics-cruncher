@@ -19,7 +19,7 @@ module.exports = function (tileLayers, tile, writeData, done) {
         if (!users[user]) {
             const obj = { objects: 0 };
             config.forEach(function (conf) {
-                obj[conf] = 0.0
+                obj[conf.name] = 0.0
             });
             users[user] = obj;
         }
@@ -27,7 +27,7 @@ module.exports = function (tileLayers, tile, writeData, done) {
         const exp = processExperience(val, config)
         
         config.forEach(function (conf) {
-            users[user][conf] += exp[conf]
+            users[user][conf.name] += exp[conf.name]
         });
     });
     done(null, users);
@@ -38,15 +38,15 @@ module.exports = function (tileLayers, tile, writeData, done) {
 function processExperience(feature, config) {
     const expData = {};
     config.forEach(function (conf) {
-        expData[conf] = 0.0
+        expData[conf.name] = 0.0
     });
     config.forEach(function (conf) {
-        const filter = filters[conf];
+        const filter = filters[conf.name];
         const geometry = filter.geometry
         const tag = filter.tag
         const amenity = filter.amenity
         if (tag && utils.hasTag(feature, tag) && utils.hasGeometry(feature, geometry)) {
-            expData[conf] += computeExperience(feature, geometry)
+            expData[conf.name] += computeExperience(feature, geometry)
         }
     });
     return expData;

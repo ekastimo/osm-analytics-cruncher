@@ -1,6 +1,7 @@
 {
     "geometry": "Point",
     "tag": "building",
+    "id":"fspdistribution",
     "experience": {
         "file": "./experiences.json",
         "field": "mobilemoney"

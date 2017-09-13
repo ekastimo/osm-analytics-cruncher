@@ -15,10 +15,14 @@ const readCompositeProps = utils.readCompositeProps;
 const isMMAgent = utils.isMMAgent;
 const isATM = utils.isATM;
 const isBank = utils.isBank;
-const selectedBanks = require('../banks-atms-list.json');
+
 var filter = global.mapOptions.filter || {};
 var fspConfig = filter['fsp'];
-const _MAX_DISTANCE = filter['MAX_DISTANCE'] || 1000000;// TODO use more educated constant
+if (fspConfig) {
+    var fspUtils = require(`../fsp-filters/${filter.id}`)
+    var _MAX_DISTANCE = fspUtils['max-distance'] || 1000000;
+}
+
 var binningFactor = global.mapOptions.binningFactor; // number of slices in each direction
 
 Array.prototype.scaleBetween = function (scaledMin, scaledMax) {
@@ -29,7 +33,7 @@ Array.prototype.scaleBetween = function (scaledMin, scaledMax) {
 
 module.exports = function (tileLayers, tile, writeData, done) {
     var layer = tileLayers.osm.osm;
-    var popn = fspConfig ? tileLayers.popn['12geojson'] : {};
+    var popn = fspConfig ? tileLayers.popn['population'] : {};
     var tileBbox = sphericalmercator.bbox(tile[0], tile[1], tile[2]);
     var bins = [],
         bboxMinXY = sphericalmercator.px([tileBbox[0], tileBbox[1]], tile[2]),
@@ -147,56 +151,32 @@ module.exports = function (tileLayers, tile, writeData, done) {
         feature.properties._userExperiences = lodash.sampleSize(experiences, 16).join(';');
 
         if (!fspConfig)
-            return;// Ignore FSP Computations
+            return;// Ignore FSP Computations for core osm crunching
         // FSP Computation
-        // TODO Find way of processing via config
-        if (fspConfig === 'qn1') {
-            var noOfBuildings = stats.sum(lodash.map(binObjects[index], '_buildingCount'));
-            var noOfMMAgents = stats.sum(lodash.map(binObjects[index], '_mobile_money_agentCount'));
-            var noOfHighways = stats.sum(lodash.map(binObjects[index], '_highwayCount'));
-            var noOfPeople = getPopulation(feature, popn.features);
-            var peoplePerAgent = (noOfMMAgents <= 0) ? 0 : Math.ceil(noOfPeople / noOfMMAgents);
-            var economicActivity = computeEconActivity(noOfBuildings, noOfMMAgents, noOfHighways, noOfPeople);
 
-            feature.properties._populationDensity = noOfPeople;
-            feature.properties._peoplePerAgent = peoplePerAgent;
-            feature.properties._economicActivity = economicActivity;
-            feature.properties._noOfMMAgents = noOfMMAgents;
-        } else if (fspConfig === 'qn2') {
-            var _bankCount = stats.sum(lodash.map(binObjects[index], '_bankCount'));
-            var noOfMMAgents = stats.sum(lodash.map(binObjects[index], '_mobile_money_agentCount'));
-            feature.properties._noOfMMAgents = noOfMMAgents;
-            feature.properties._xcount = noOfMMAgents;
-
-            // Give the cell the min distance from a bank
-            // This is computed from the properties agregated during bining
-            const dynamicProps = ["_distanceFromBank", "_distanceFromATM"];
-            selectedBanks.forEach(function (bank) {
-                dynamicProps.push(`_bank_${bank.name}`);
-                dynamicProps.push(`_atm_${bank.name}`);
-            });
-
-            dynamicProps.forEach(function (propName) {
-                const minValue = stats.min(binObjects[index].map(_bin => _bin[propName] || _MAX_DISTANCE));
-                feature.properties[propName] = minValue;
-            })
-        } else if (fspConfig === 'qn4') {
-            const keys = ['mobile_money_agent', 'bank', 'atm', 'credit_institution', 'icrofinance_bank', 'microfinance', 'sacco', 'bureau_de_change', 'money_transfer', 'post_office'];
-            const counts = {};
-            var noOfPeople = getPopulation(feature, popn.features);
-            keys.forEach((key) => {
-                const contkey = `_${key}Count`;
-                const peoplekey = `_per_${key}Count`;
-                const countValue = stats.sum(lodash.map(binObjects[index], contkey));
-                counts[contkey] = countValue;
-                counts[peoplekey] = noOfPeople / countValue;
-            })
-            Object.assign(feature.properties, counts);
+        fspUtils.aggregate.sum && fspUtils.aggregate.sum.forEach(function (conf) {
+            feature.properties[conf.name] = stats.sum(lodash.map(binObjects[index], conf.prop));
+        })
+        fspUtils.aggregate.min && fspUtils.aggregate.min.forEach(function (propName) {
+            const minValue = stats.min(binObjects[index].map(_bin => _bin[propName]));
+            feature.properties[propName] = minValue;
+        })
+        if (fspUtils.aggregate.population) {
+            feature.properties["_population"] = getPopulation(feature, popn.features)
         }
+        if (fspUtils.aggregate.economic) {
+            feature.properties["_economicActivity"] = computeEconActivity(feature.properties)
+        }
+        fspUtils.aggregate.divisors && fspUtils.aggregate.divisors.forEach(function (conf) {
+            const divisor = feature.properties[conf.divisor]
+            const divident = feature.properties[conf.divident]
+            feature.properties[conf.name] = (divident <= 0) ? 0 : Math.ceil(divisor / divident)
+        })
     });
 
     output.features = output.features.filter(function (feature) {
-        return feature.properties._xcount > 0;
+        const counter = fspConfig ? '_xcount' : '_count'
+        return feature.properties[counter] > 0;
     });
 
     output.properties = { tileX: tile[0], tileY: tile[1], tileZ: tile[2] };
@@ -219,7 +199,11 @@ function getScaled(num, max, min) {
     return [min, num, max].scaleBetween(1, 10)[1];
 }
 
-function computeEconActivity(noOfBuildings, noOfMMAgents, noOfHighways, noOfPeople) {
+function computeEconActivity(props) {
+    const noOfBuildings = props['_buildingCount']
+        , noOfMMAgents = props['_noOfMMAgents']
+        , noOfHighways = props['_highwayCount']
+        , noOfPeople = props['_population']
     const scaledMin = 0.3010299956639812;// Pre attained value
     const scaledMax = 4.072984744627931;// Pre attained value
     const total = noOfBuildings + noOfMMAgents + noOfHighways + noOfPeople;
