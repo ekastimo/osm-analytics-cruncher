@@ -1,0 +1,7 @@
+[
+{"name":"buildings","factor":64}
+,
+{"name":"highways","factor":32}
+,
+{"name":"waterways","factor":32}
+]

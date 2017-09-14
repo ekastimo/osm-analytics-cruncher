@@ -16,7 +16,7 @@ tileReduce({
         raw: false
     }],
     mapOptions: {
-        filterPath: fsp ? `fsp-filters/${filterPath}` : `osm-filters/${filterPath}`,
+        filterPath: fsp ? `filters-fsp/${filterPath}` : `filters-osm/${filterPath}`,
     }
 })
     .on('reduce', function (d) {

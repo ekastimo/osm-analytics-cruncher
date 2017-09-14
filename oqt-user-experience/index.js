@@ -2,7 +2,7 @@
 'use strict';
 var tileReduce = require('tile-reduce');
 var path = require('path');
-var config = require("../osm-filters/config-all.json");
+var config = require("../filters-osm/config-all.json");
 var mbtilesPath = process.argv[2] || "osm.mbtiles";
 
 var users = {};

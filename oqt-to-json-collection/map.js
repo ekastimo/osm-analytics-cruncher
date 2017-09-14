@@ -3,7 +3,7 @@ const fs = require('fs');
 const utils = require("../oqt-utils/utils");
 const filterFeatures = utils.filterFeatures;
 const filterPath = global.mapOptions.filterPath;
-const filter = filterPath ? JSON.parse(fs.readFileSync(global.mapOptions.filterPath)) : false;
+const filter = filterPath ? JSON.parse(fs.readFileSync(`filters-fsp/${filterPath}`)) : false;
 module.exports = function (tileLayers, tile, writeData, done) {
     var layer = tileLayers.osm.osm;
     if (filter)

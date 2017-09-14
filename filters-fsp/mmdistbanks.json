@@ -1,0 +1,23 @@
+{
+    "id":"mmdistbanks",
+    "geometry": "Point",
+    "experience": {
+        "file": "./experiences.json",
+        "field": "mmdistbanks"
+    },
+    "composite": true,
+    "tags": [],
+    "amenities": [
+        "mobile_money_agent",
+        "bank",
+        "atm"
+    ],
+    "extraFields": [
+        "_distanceFromBank",
+        "_distanceFromATM",
+        "_bank_",
+        "_atm_"
+    ],
+    "fsp": "qn2"
+    
+}

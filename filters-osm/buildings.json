@@ -1,0 +1,10 @@
+{
+    "name":"buildings",
+    "factor":64,
+    "geometry": "Polygon",
+    "tag": "building",
+    "experience": {
+        "file": "./experiences.json",
+        "field": "buildings"
+    }
+}

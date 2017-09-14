@@ -8,6 +8,3 @@ node_modules/
 server/node_modules/
 .vscode/
 .idea/
-oqt-popn/
-mobilemoneyagents-data-enriched.json
-mobilemoneyagents-data.json

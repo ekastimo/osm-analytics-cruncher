@@ -106,14 +106,4 @@ cp fspdistribution.mbtiles $RESULTS_DIR/fspdistribution.mbtiles.tmp
 rm $RESULTS_DIR/fspdistribution.mbtiles -f
 mv $RESULTS_DIR/fspdistribution.mbtiles.tmp $RESULTS_DIR/fspdistribution.mbtiles
 
-./make-json.sh planet.mbtiles mobile_money_agent
-./make-json.sh planet.mbtiles atm
-./make-json.sh planet.mbtiles bank
-./make-json.sh planet.mbtiles credit_institution
-./make-json.sh planet.mbtiles microfinance_bank
-./make-json.sh planet.mbtiles microfinance
-./make-json.sh planet.mbtiles sacco
-./make-json.sh planet.mbtiles bureau_de_change
-./make-json.sh planet.mbtiles money_transfer
-./make-json.sh planet.mbtiles post_office
 #rm planet.mbtiles

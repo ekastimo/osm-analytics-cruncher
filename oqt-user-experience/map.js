@@ -7,7 +7,7 @@ var utils = require('../oqt-utils/utils');
 var config = global.mapOptions.config
 var filters = {};
 config.forEach(function (filter) {
-    filters[filter] = JSON.parse(fs.readFileSync(`./osm-filters/${filter}.json`));
+    filters[filter.name] = JSON.parse(fs.readFileSync(`./filters-osm/${filter.name}.json`));
 });
 
 // Filter features touched by list of users defined by users.json

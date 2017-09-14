@@ -17,7 +17,7 @@ const isBank = utils.isBank;
 var filter = JSON.parse(fs.readFileSync(global.mapOptions.filterPath));
 var fspConfig = filter['fsp'];
 if (fspConfig === "qn2") {
-    var fspUtils = require(`../fsp-filters/${filter.id}`)
+    var fspUtils = require(`../filters-fsp/${filter.id}`)
     var _MAX_DISTANCE = fspUtils['max-distance'] || 1000000;
     var mainFeature = fspUtils.main
     var distances = fspUtils.distances

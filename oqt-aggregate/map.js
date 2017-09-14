@@ -19,7 +19,7 @@ const isBank = utils.isBank;
 var filter = global.mapOptions.filter || {};
 var fspConfig = filter['fsp'];
 if (fspConfig) {
-    var fspUtils = require(`../fsp-filters/${filter.id}`)
+    var fspUtils = require(`../filters-fsp/${filter.id}`)
     var _MAX_DISTANCE = fspUtils['max-distance'] || 1000000;
 }
 

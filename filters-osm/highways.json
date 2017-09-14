@@ -1,0 +1,10 @@
+{
+    "name":"highways",
+    "factor":32,
+    "geometry": "LineString",
+    "tag": "highway",
+    "experience": {
+        "file": "./experiences.json",
+        "field": "highways"
+    }
+}

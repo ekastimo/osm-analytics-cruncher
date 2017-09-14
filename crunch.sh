@@ -28,5 +28,5 @@ for i in {12..0}; do
 done
 
 # clean up temporary data
-#rm intermediate/*
-#rmdir intermediate
+rm intermediate/*
+rmdir intermediate

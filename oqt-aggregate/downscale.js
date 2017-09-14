@@ -8,7 +8,7 @@ var mbtilesPath = process.argv[2] || "osm.mbtiles";
 var binningFactor = +process.argv[3] || 100;
 var filterPath = process.argv[4] || './filter.json';
 var fsp = process.argv[5] || false;
-var filter = JSON.parse(fs.readFileSync(fsp ? `fsp-filters/${filterPath}` : `osm-filters/${filterPath}`));
+var filter = JSON.parse(fs.readFileSync(fsp ? `filters-fsp/${filterPath}` : `filters-osm/${filterPath}`));
 var cpus = require('os').cpus().length;
 
 tileReduce({

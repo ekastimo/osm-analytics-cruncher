@@ -18,7 +18,7 @@ var mbtilesPath = global.mapOptions.mbtilesPath;
 var filter = global.mapOptions.filter
 var fspConfig = filter['fsp'];
 if (fspConfig) {
-    var fspUtils = require(`../fsp-filters/${filter.id}`)
+    var fspUtils = require(`../filters-fsp/${filter.id}`)
 }
 var initQueue = queue(1);
 
