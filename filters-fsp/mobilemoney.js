@@ -14,7 +14,6 @@ const config = {
     downscale: {
         max: ['_noOfMMAgents', '_population','_economicActivity','_peoplePerAgent'],
     }
-    ////_distanceFromBank,_distanceFromATM,_noOfMMAgents
 }
 
 module.exports = config

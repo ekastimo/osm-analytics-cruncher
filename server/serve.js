@@ -61,10 +61,28 @@ function loadData(name, callback) {
     })
 }
 
+function getFiles(dir) {
+    const fileList = [];
+    var files = fs.readdirSync(dir);
+    for (var i in files) {
+        if (!files.hasOwnProperty(i))
+            continue;
+        
+        var fileName = files[i];
+        var name = dir + '/' + fileName;
+        
+        if (!fs.statSync(name).isDirectory() && isTile(fileName)) {
+            fileList.push(fileName.substring(0,fileName.indexOf(".mbtiles")));
+        }
+    }
+    return fileList;
+}
 
+function isTile(file) {
+    return file.indexOf('.mbtiles') > 0
+}
 
-const tileFiles = ["buildings", "highways", "railways", "mobilemoney","waterways", "mmdistbanks", "popnbankatm","population","pimpedpopn","mybanks","fspdistribution"];
-
+const tileFiles = getFiles("../results")
 
 var q = queue();
 tileFiles.forEach(function (file) {
