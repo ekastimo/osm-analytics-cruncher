@@ -1,0 +1,10 @@
+{
+    "name":"power",
+    "factor":32,
+    "geometry": "Point",
+    "tag": "power",
+    "experience": {
+        "file": "./experiences.json",
+        "field": "power"
+    }
+}
